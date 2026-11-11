@@ -1,0 +1,381 @@
+@namespace WEB1.Module.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="dialog position-relative @(DragStart ? "temblorcito" : "") text-center">
+    <main @ondragover="onDragover" @ondragend="ondragDrop" @ondragleave="ondragDrop" @ondrop="ondragDrop">
+        <div class="drop-zone position-relative @((!charging && (Archivos.Count == 0 || Cantidad == archivo.multiple)) ? "dashed" : "")"
+             style="min-height:@MinHeight" id="drop_zone">
+            <i class="bi bi-cloud-arrow-up-fill fs-1 text-primary mb-2"></i>
+            <InputFile accept="@_AcceptFile" type="file" OnChange="OnFileChange" id="@_fileInputId" class="archivo position-absolute w-100 h-100 top-0 start-0" style="opacity: 0 !important; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; cursor: pointer;" multiple="@(Cantidad == archivo.multiple)" title="" />
+            <p><label for="@_fileInputId"><a class="text-decoration-none fw-semibold text-primary">Click para subir</a></label> o arrastre y suelte el archivo</p>
+            <small class="text-muted">Tamaño máximo @MaxSize MB</small>
+        </div>
+    </main>
+    @if (Cantidad == archivo.multiple)
+    {
+        <footer class="position-relative w-100">
+            <ListadoGenerico Listado="Archivos">
+                <HayRegistros Context="item">
+                    <div class="w-100 flex-row d-flex justify-content-between pb-3 c-pointer position-relative">
+                        <div class="delete position-absolute" @onclick="() => RemoveItem(item)">
+                            <i class="bi bi-x rounded-circle bg-danger fs-6 delete-icon text-white"></i>
+                        </div>
+                        <div class="main-list d-flex gap-2 ms-4 text-start">
+                            <div style="width: 30px;">
+                                <i class="bi bi-file-earmark fs-2 me-2 text-primary"></i>
+                            </div>
+                            <div class="d-flex flex-column text-wrap overflow-hidden">
+                                <span class="fw-semibold text-body text-truncate">@($"{item.name}{item.extension}")</span>
+                                <span class="text-secondary small">@item.size KB</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-center fs-4 position-relative">
+                            <div class="preview position-relative">
+                                @if (item.task.status == status.completada)
+                                {
+                                    <div class="cursor-pointer" @onclick="() => onPreview(item)">
+                                        @if (!item.preview)
+                                        {
+                                            <i class="bi bi-box-arrow-down-left text-secondary"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-box-arrow-in-up-right text-secondary"></i>
+                                        }
+                                    </div>
+                                }
+                                @if (item.preview)
+                                {
+                                    <div id="imagePreviewContainer" tabindex="0" @onfocusout="() => item.preview = false">
+                                        @if (item.type == Dato.imagen)
+                                        {
+                                            <img id="imagePreview" src="@item.thumbnail" class="shadow-sm rounded-3">
+                                        }
+                                        else
+                                        {
+                                            <div class="p-3 bg-body-tertiary rounded-3 text-center">
+                                                <i class="bi bi-file-earmark-text fs-1 text-primary"></i>
+                                                <div class="document bg-light text-dark">
+                                                    <span>@item.extension</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            @if (item.task.status == status.error)
+                            {
+                                <span class="fs-6 error-message text-danger text-center align-middle">@item.task.message</span>
+                            }
+                            @switch (item.task.status)
+                            {
+                                case status.esperando:
+                                    <div class="text-center">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    break;
+                                case status.completada:
+                                    <div class="text-center">
+                                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                    </div>
+                                    break;
+                                case status.error:
+                                    <div class="text-center">
+                                        <i class="bi bi-x-circle-fill text-danger fs-4"></i>
+                                    </div>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                    @if (item.task.status != status.completada)
+                    {
+                        <ProgressBar Porcentaje="@item.upload" clases="progreso mt-1" />
+                    }
+                </HayRegistros>
+                <NoHayRegistros>
+                </NoHayRegistros>
+            </ListadoGenerico>
+        </footer>
+    }
+    else
+    {
+        <ListadoGenerico Listado="Archivos">
+            <HayRegistros Context="item">
+                @if (item.task.status == status.completada)
+                {
+                    <footer class="position-absolute top-0 start-0 m-0 uniquePreview d-flex flex-column justify-content-center align-items-center w-100 h-100 bg-body rounded-4 p-3 border shadow-xs" style="z-index: 5;">
+                        @if (item.type == Dato.imagen)
+                        {
+                            <img src="@item.thumbnail" class="imageUnique rounded-3 mb-2" style="max-height: 130px; object-fit: contain;">
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column justify-content-center align-items-center mb-2">
+                                <i class="bi bi-file-earmark-check fs-1 text-success mb-1"></i>
+                                <span class="fw-semibold text-body small text-truncate" style="max-width: 200px;">@($"{item.name}{item.extension}")</span>
+                                <span class="text-muted small">@item.size KB</span>
+                            </div>
+                        }
+
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" @onclick="ClearSingleFile">
+                            <i class="bi bi-trash me-1"></i> Cambiar Archivo
+                        </button>
+                    </footer>
+                }
+                @if (item.task.status != status.completada)
+                {
+                    <ProgressBar Porcentaje="@item.upload" clases="progreso mt-2" />
+                }
+            </HayRegistros>
+            <NoHayRegistros>
+            </NoHayRegistros>
+        </ListadoGenerico>
+        @if (charging)
+        {
+            <footer class="position-absolute top-0 start-0 charging m-0 d-flex justify-content-center align-items-center w-100 h-100 bg-body-secondary bg-opacity-75 rounded-4" style="z-index: 6;">
+                <div class="loader"></div>
+            </footer>
+        }
+    }
+</div>
+
+@code {
+    // Servicios
+    [Inject] public FloatingMessage AlertaEmergente { get; set; } = default!;
+
+    // Parámetros
+    [Parameter] public bool IgnoreValidator { get; set; } = true;
+    [Parameter] public int MaxSize { get; set; } = 5;
+    [Parameter] public Accept AcceptFile { get; set; } = Accept.documento;
+    [Parameter] public EventCallback<List<Archivos>> FileCharged { get; set; }
+    [Parameter] public archivo Cantidad { get; set; } = archivo.unico;
+    [Parameter] public string MinHeight { get; set; } = "250px";
+
+    // Variables internas
+    const string format = "image/jpeg";
+    private InputFileChangeEventArgs? file;
+    private List<Archivos> Archivos = new();
+    private ValidadordeArchivo validador = new();
+    private int idFile { get; set; }
+    private Dato fileType { get; set; }
+    private string fileTypextension { get; set; } = "";
+    public TaskProcess<byte[]> tarea = new() { status = status.esperando };
+    private Archivos archivoSelected = new();
+    private bool charging = false;
+    private bool DragStart = false;
+    private string _fileInputId = "file_" + Guid.NewGuid().ToString("N");
+
+    private void onDragover(DragEventArgs e) => DragStart = true;
+    private void ondragDrop() => DragStart = false;
+
+    private void RemoveItem(Archivos item)
+    {
+        Archivos.Remove(item);
+        FileCharged.InvokeAsync(Archivos);
+    }
+
+    private void ClearSingleFile()
+    {
+        Archivos.Clear();
+        FileCharged.InvokeAsync(Archivos);
+    }
+
+    private void onPreview(Archivos archivos)
+    {
+        Archivos.ForEach(x =>
+        {
+            if (x.id == archivos.id) { x.preview = !x.preview; }
+            else { x.preview = false; }
+        });
+        archivoSelected = archivos;
+    }
+
+    private async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        tarea = new();
+        DragStart = false;
+        if (Archivos.Count > 0 && Cantidad == archivo.multiple)
+        {
+            Archivos.ForEach(x => x.preview = false);
+        }
+
+        if (Cantidad == archivo.unico)
+        {
+            Archivos = new();
+            charging = true;
+        }
+
+        long B = (long)MaxSize * 1024 * 1024;
+        string[] strings = e.File.Name.Split('.');
+        int position = strings.Length;
+        fileTypextension = "." + strings[position - 1];
+
+        var validacion = validador.Validar(e.File.ContentType, _Tipo);
+        fileType = validador.TipoDato;
+
+        if (!validacion && (!IgnoreValidator || Cantidad == archivo.unico) && _Tipo != Dato.otro)
+        {
+            await AlertaEmergente.MostrarMensajeErrorWithTitle($"La extensión del archivo {e.File.Name} es inválida.", "Upload");
+            charging = false;
+            return;
+        }
+
+        if (e.File.Size > B && (!IgnoreValidator || Cantidad == archivo.unico))
+        {
+            await AlertaEmergente.MostrarMensajeErrorWithTitle($"El tamaño del archivo {e.File.Name} supera los {MaxSize}MB máximo aceptado.", "Upload");
+            charging = false;
+            return;
+        }
+
+        idFile = Archivos.Count > 0 ? Archivos.Max(x => x.id) + 1 : 1;
+
+        Archivos newFile = new()
+        {
+            id = idFile,
+            name = strings[0],
+            extension = "." + strings[^1],
+            size = (int)(e.File.Size / 1024),
+            upload = 0,
+            type = fileType,
+            task = tarea,
+            thumbnail = "",
+            contentType = e.File.ContentType
+        };
+
+        newFile.progress = new Progress<int>(x =>
+        {
+            newFile.upload = x;
+            InvokeAsync(StateHasChanged);
+        });
+
+        Archivos.Add(newFile);
+        StateHasChanged();
+        this.file = e;
+
+        await ProcessImageAsync(newFile.progress, B, validacion);
+        newFile.task = tarea;
+        await FileCharged.InvokeAsync(this.Archivos);
+        charging = false;
+    }
+
+    private async Task ProcessImageAsync(IProgress<int>? progress, long size, bool validacion)
+    {
+        var imageBytes = await LoadImageAsync(progress, size, validacion);
+        if (imageBytes.data != null)
+        {
+            var imgb64 = Convert.ToBase64String(imageBytes.data);
+            var target = Archivos.FirstOrDefault(z => z.id == idFile);
+            if (target != null)
+            {
+                if (fileType == Dato.imagen)
+                {
+                    target.thumbnail = $"data:{file?.File.ContentType ?? format};base64,{imgb64}";
+                }
+                else
+                {
+                    target.thumbnail = "";
+                    target.extension = fileTypextension;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task<TaskProcess<byte[]>> LoadImageAsync(IProgress<int>? progress, long size, bool validacion)
+    {
+        try
+        {
+            if (file == null)
+            {
+                return new TaskProcess<byte[]> { status = status.error, message = "Archivo no encontrado." };
+            }
+
+            if (file.File.Size <= size)
+            {
+                if (validacion || _Tipo == Dato.otro)
+                {
+                    using (var stream = file.File.OpenReadStream(maxAllowedSize: size))
+                    {
+                        using (var ms = new MemoryStream())
+                        {
+                            var buffer = new byte[8192];
+                            int bytesRead;
+                            long totalBytesRead = 0;
+                            long totalBytes = file.File.Size;
+
+                            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                totalBytesRead += bytesRead;
+                                int currentProgress = (int)(totalBytesRead * 100 / totalBytes);
+                                progress?.Report(currentProgress);
+                                await ms.WriteAsync(buffer, 0, bytesRead);
+                            }
+
+                            tarea = new()
+                            {
+                                data = ms.ToArray(),
+                                status = status.completada,
+                                message = "Archivo subido correctamente."
+                            };
+                            return tarea;
+                        }
+                    }
+                }
+                else
+                {
+                    tarea = new()
+                    {
+                        status = status.error,
+                        data = null,
+                        message = "La extensión del archivo es incorrecta."
+                    };
+                    return tarea;
+                }
+            }
+            else
+            {
+                tarea = new()
+                {
+                    status = status.error,
+                    data = null,
+                    message = $"El tamaño del archivo supera los {MaxSize}MB."
+                };
+                return tarea;
+            }
+        }
+        catch (Exception e)
+        {
+            tarea = new()
+            {
+                status = status.error,
+                data = null,
+                message = e.Message
+            };
+            return tarea;
+        }
+    }
+
+    private Dato _Tipo => AcceptFile switch
+    {
+        Accept.imagen => Dato.imagen,
+        Accept.audio => Dato.audio,
+        Accept.video => Dato.video,
+        Accept.documento => Dato.documento,
+        Accept.personalizado => Dato.personalizado,
+        _ => Dato.otro
+    };
+
+    private string _AcceptFile => AcceptFile switch
+    {
+        Accept.imagen => string.Join(", ", validador.ObtenerListaImagen()),
+        Accept.audio => string.Join(", ", validador.ObtenerListaaudio()),
+        Accept.video => string.Join(", ", validador.ObtenerListavideo()),
+        Accept.documento => string.Join(", ", validador.ObtenerListaDocumento()),
+        Accept.personalizado => string.Join(", ", validador.ObtenerListaPersonalizado()),
+        Accept.all => "",
+        _ => ""
+    };
+}

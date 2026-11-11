@@ -1,0 +1,129 @@
+:root,
+[data-bs-theme=light] {
+    /**/
+    --bs-tertiary-bg: #dee2e6;
+    --bs-border-color: #ced4da;
+    --filter: initial;
+    --filter-logo: initial;
+    --bs-offcanvas-zindex: 1060 !important;
+    --bs-table-hover-bg: #FCFFE9 !important;
+    --bs-bg-active-nuevo: #4b9b76 !important;
+}
+
+:root {
+    --mud-palette-primary: var(--bs-primary) !important;
+    --mud-palette-surface: var(--bs-body-bg) !important;
+    --mud-palette-background: var(--bs-body-bg) !important;
+    --mud-palette-background-grey: var(--bs-body-bg) !important;
+    --mud-palette-drawer-background: var(--bs-body-bg) !important;
+    --spinners: var(--bs-danger);
+}
+
+[data-bs-theme=light] .table-hover>tbody>tr:hover>* {
+    color: #000;
+    --bs-table-bg-state: #DAE4EE !important;
+}
+
+[data-bs-theme="dark"] .text-danger {
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] {
+    /**/
+    --mud-palette-primary-text: var(--bs-light) !important;
+    --bs-tertiary-bg: #2b3035;
+    --bs-border-color: #495057;
+    --filter: invert(1) hue-rotate(180deg) contrast(3);
+    --filter-logo: brightness(0) invert(1);
+    --bs-offcanvas-zindex: 1060 !important;
+    --bs-table-hover-bg: var(--bs-body-bg) !important;
+    --mud-palette-text-primary: var(--bs-light) !important;
+    --bs-bg-active-nuevo: #08472a !important;
+    --filter-logo: contrast(0.7) brightness(2);
+}
+
+
+[data-bs-theme="dark"] .mud-input,
+[data-bs-theme="dark"] div.mud-input-slot.mud-input-root,
+[data-bs-theme="dark"] .mud-icon-button,
+[data-bs-theme="dark"] .mud-paper,
+[data-bs-theme="dark"] .mud-picker-time-container .mud-picker-time-clock .mud-clock-number,
+[data-bs-theme="dark"] .mud-list-subheader,
+[data-bs-theme="dark"] .mud-icon-default,
+[data-bs-theme="dark"] .mud-icon-root.mud-svg-icon,
+[data-bs-theme="dark"] .mud-list-item-icon {
+    color: var(--bs-light);
+}
+
+
+[data-bs-theme="dark"] .mud-shrink~label.mud-input-label.mud-input-label-inputcontrol,
+[data-bs-theme="dark"] .mud-input-control>.mud-input-control-input-container>.mud-input-label-inputcontrol {
+    color: rgba(var(--bs-body-color-rgb), .65);
+}
+
+[data-bs-theme="dark"] .mud-switch-span .mud-switch-track {
+    background-color: rgb(213 226 247);
+}
+
+.mud-input.mud-input-outlined:not(.mud-disabled):not(:focus-within):hover .mud-input-outlined-border {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.mud-input>textarea.mud-input-root-outlined {
+    margin: 0px;
+    height: initial !important;
+    padding: 18.5px 14px;
+}
+
+.mud-input>.mud-input-root-outlined {
+    margin: 0px;
+}
+
+.mark,
+mark {
+    color: var(--bs-highlight-color) !important;
+    background-color: var(--bs-highlight-bg) !important;
+    border: none !important;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.disabled a {
+    pointer-events: none;
+    cursor: default;
+}
+
+.mud-table-cell,
+.mud-table-bordered .mud-table-container .mud-table-root .mud-table-body .mud-table-row .mud-table-cell:not(:last-child) {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-right: none;
+}
+
+.mud-input.mud-input-outlined .mud-input-outlined-border {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.mud-input-error mud-input-outlined-border {
+    border-color: red !important;
+}
+
+.disabled-inline-margin label {
+    margin-right: 0px !important;
+    margin-inline-end: 0px !important;
+}
+
+.bg-primary-emphasis {
+    background: var(--bs-primary-text-emphasis) !important;
+    color: var(--bs-light) !important;
+}
+
+table td,
+table th {
+    vertical-align: middle;
+}
+
+.mud-input-label-outlined {
+    background-color: var(--bs-body-bg) !important;
+}

@@ -1,0 +1,201 @@
+@page "/module/{ModulePath}"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using WEB1.SandBox.DTOs
+@using WEB1.SandBox.Services
+@using WEB1.Module.Client.Services
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+@inject LayoutService LayoutService
+@inject ModuleService ModuleService
+
+<PageTitle>@(_currentModule?.name ?? "Módulo")</PageTitle>
+
+<div class="container-fluid px-4 py-3">
+    @if (_isLoading)
+    {
+        <div class="text-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <p class="mt-3 text-muted">Cargando módulo...</p>
+        </div>
+    }
+    else if (_currentModule != null)
+    {
+        <!-- Breadcrumb Superior -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center shadow-xs" 
+                    @onclick="NavigateBack">
+                <i class="bi bi-arrow-left me-1"></i> Volver al Inicio
+            </button>
+        </div>
+
+        <!-- Tarjeta Principal del Módulo (Cabecera Grande) -->
+        <div class="module-header-card bg-body border rounded-4 p-4 p-md-5 mb-4 shadow-sm position-relative">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-md-7 col-lg-8 d-flex align-items-center gap-4">
+                    <!-- Icono Grande con Color de Bootstrap -->
+                    <div class="module-icon-badge-lg d-flex align-items-center justify-content-center flex-shrink-0 bg-primary-subtle text-primary">
+                        <i class="@_currentModule.icon fs-1"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1 text-body">@_currentModule.name</h1>
+                        <p class="text-secondary small mb-0">
+                            @(_currentModule.interfaceList.Count == 1 ? "1 interfaz disponible" : $"{_currentModule.interfaceList.Count} interfaces disponibles")
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Buscador de Interfaces -->
+                <div class="col-12 col-md-5 col-lg-4">
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute text-muted" style="top: 10px; left: 16px;"></i>
+                        <input type="text" class="form-control rounded-pill ps-5 bg-body-tertiary border-0 py-2 shadow-xs" 
+                               placeholder="Buscar interfaz..." 
+                               @bind="_searchTerm" 
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Título de Sección -->
+        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+            <h6 class="fw-bold mb-0 text-body">Acciones y Formularios</h6>
+            <span class="text-secondary small">@FilteredInterfaces.Count() disponibles</span>
+        </div>
+
+        <!-- Grid de Interfaces (Tarjetas de 3 Columnas) -->
+        @if (FilteredInterfaces.Any())
+        {
+            <div class="row g-3">
+                @foreach (var iface in FilteredInterfaces)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="shell-interface-card bg-body border rounded-4 p-3 d-flex align-items-center justify-content-between shadow-xs cursor-pointer h-100" 
+                             @onclick="@(() => NavigateToInterface(iface.path))">
+                            
+                            <div class="d-flex align-items-center gap-3 overflow-hidden me-2">
+                                <!-- Icono de la Interfaz con Fondo de Bootstrap -->
+                                <div class="interface-icon-badge bg-body-tertiary d-flex align-items-center justify-content-center flex-shrink-0 text-primary">
+                                    <i class="@iface.icon fs-5"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <h6 class="fw-bold mb-0 text-truncate text-body" title="@iface.name">@iface.name</h6>
+                                    <span class="text-secondary small" style="font-size: 0.8rem;">Ir a la página</span>
+                                </div>
+                            </div>
+
+                            <!-- Flecha Chevron -->
+                            <i class="bi bi-chevron-right text-muted fs-6 interface-arrow"></i>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 bg-body border rounded-4">
+                <i class="bi bi-search text-muted fs-2"></i>
+                <p class="mt-2 text-muted mb-0">No se encontraron interfaces que coincidan con "@_searchTerm".</p>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4 mx-auto" Style="max-width: 500px;">
+                Módulo no encontrado o no disponible (@ModulePath).
+            </MudAlert>
+            <button class="btn btn-primary rounded-pill px-4" @onclick="NavigateBack">
+                Regresar al Inicio
+            </button>
+        </div>
+    }
+</div>
+
+<style>
+    .module-header-card {
+        border-radius: 24px !important;
+        border: 1px solid rgba(0, 0, 0, 0.07) !important;
+    }
+
+    .module-icon-badge-lg {
+        width: 76px;
+        height: 76px;
+        border-radius: 22px;
+    }
+
+    .shell-interface-card {
+        border-radius: 16px !important;
+        border: 1px solid rgba(0, 0, 0, 0.07) !important;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .shell-interface-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06) !important;
+        border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
+    }
+
+    .shell-interface-card:hover .interface-arrow {
+        color: var(--bs-primary) !important;
+        transform: translateX(3px);
+    }
+
+    .interface-icon-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .interface-arrow {
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string ModulePath { get; set; } = string.Empty;
+
+    private ModuleDTO? _currentModule;
+    private string _searchTerm = string.Empty;
+    private bool _isLoading = true;
+
+    private IEnumerable<InterfaceDTO> FilteredInterfaces =>
+        _currentModule?.interfaceList?
+            .Where(x => x.status && (string.IsNullOrWhiteSpace(_searchTerm) || x.name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))) 
+        ?? Enumerable.Empty<InterfaceDTO>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(ModulePath))
+        {
+            _isLoading = true;
+            _currentModule = await ModuleService.GetModuleByPathAsync(ModulePath);
+
+            if (_currentModule != null)
+            {
+                LayoutService.SetTitle(_currentModule.name);
+            }
+            _isLoading = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void NavigateToInterface(string path)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            NavigationManager.NavigateTo(path);
+        }
+    }
+}

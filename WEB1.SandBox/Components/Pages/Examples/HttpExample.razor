@@ -1,0 +1,127 @@
+@page "/examples/http"
+@using MudBlazor
+@using WEB1.Module.Client.Services
+@inject LayoutService LayoutService
+@inject FloatingMessage FloatingMessage
+@inject IHttpClientFactory HttpClientFactory
+@inject IConfiguration Configuration
+
+<PageTitle>Ejemplo HTTP - Peticiones API</PageTitle>
+
+<div class="container-fluid p-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">Cliente HTTP y Peticiones API</h2>
+        <p class="text-muted">Demostración de consumo de servicios HTTP autenticados contra el backend.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. Estado de Configuración API -->
+        <div class="col-md-6">
+            <MudCard Elevation="2" Class="rounded-xl pa-4 h-100">
+                <MudText Typo="Typo.h6" Class="mb-3">Configuración de Endpoint</MudText>
+                
+                <div class="mb-3">
+                    <label class="form-label small text-muted">URL Base Backend:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-body-tertiary"><i class="bi bi-link-45deg"></i></span>
+                        <input type="text" class="form-control bg-body-tertiary" value="@_apiBaseUrl" readonly />
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
+                        <i class="bi bi-shield-check me-1"></i> JWT Bearer Configurado
+                    </MudChip>
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                        HttpClient: BackendApi
+                    </MudChip>
+                </div>
+
+                <p class="text-muted small mb-0">
+                    Las peticiones realizadas a través de los clientes registrados adjuntan automáticamente el token de autenticación en las cabeceras HTTP.
+                </p>
+            </MudCard>
+        </div>
+
+        <!-- 2. Prueba Interactiva de Petición -->
+        <div class="col-md-6">
+            <MudCard Elevation="2" Class="rounded-xl pa-4 h-100">
+                <MudText Typo="Typo.h6" Class="mb-3">Prueba de Conexión HTTP</MudText>
+                <p class="text-muted small mb-3">Ejecuta una petición de verificación hacia el servidor.</p>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               Disabled="@_isLoading" 
+                               OnClick="TestConnection">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                            <span>Consultando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-send me-1"></i>
+                            <span>Probar GET /api/Auth/health</span>
+                        }
+                    </MudButton>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_responseStatus))
+                {
+                    <div class="alert @_statusAlertClass py-2 px-3 rounded-3 small">
+                        <strong>Resultado:</strong> @_responseStatus
+                    </div>
+                }
+            </MudCard>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _apiBaseUrl = string.Empty;
+    private bool _isLoading = false;
+    private string? _responseStatus;
+    private string _statusAlertClass = "alert-info";
+
+    protected override void OnInitialized()
+    {
+        LayoutService.SetTitle("Ejemplo HTTP");
+        _apiBaseUrl = Configuration["BackendApi:BaseUrl"] ?? "https://localhost:7082";
+    }
+
+    private async Task TestConnection()
+    {
+        _isLoading = true;
+        _responseStatus = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BackendApi");
+            var response = await client.GetAsync("api/Auth/health");
+
+            if (response.IsSuccessStatusCode)
+            {
+                _responseStatus = $"HTTP {(int)response.StatusCode} {response.StatusCode} - Servidor en línea.";
+                _statusAlertClass = "alert-success";
+                await FloatingMessage.Success("Conexión con el servidor exitosa.", "API Online");
+            }
+            else
+            {
+                _responseStatus = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+                _statusAlertClass = "alert-warning";
+                await FloatingMessage.Warning($"Respuesta del servidor: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _responseStatus = $"Error de conexión: {ex.Message}";
+            _statusAlertClass = "alert-danger";
+            await FloatingMessage.Error("No se pudo contactar el backend.", "Error HTTP");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

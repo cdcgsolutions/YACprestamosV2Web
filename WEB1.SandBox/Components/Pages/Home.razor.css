@@ -1,0 +1,119 @@
+﻿.content-wrap .info-boxes {
+    padding: 3em 0 2em;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-gap: 2em;
+}
+
+    .content-wrap .info-boxes .info-box {
+        background-color: var(--bs-offcanvas-bg);
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 3em;
+        border: 1px solid #ede8f0;
+        border-radius: 5px;
+    }
+
+
+.content-wrap .card-items {
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-gap: 2em;
+}
+
+    .content-wrap .card-items .card-item {
+        background-color: var(--bs-tertiary-bg) !important;
+        text-align: center;
+        padding: 1.5em;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+
+.content-wrap .card-items .card-item .box-avatar {
+    width: 100px;
+    height: 65px;
+    border-radius: 50%;
+    margin: 0px auto;
+    overflow: hidden;
+}
+
+    .content-wrap .card-items .card-item .box-avatar i {
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-size: 2.5rem
+    }
+
+.content-wrap .card-items .card-item .box-info {
+    word-wrap: break-word;
+}
+
+    .content-wrap .card-items .card-item .box-info .bio-name {
+        margin: 0.1rem 0 0.75em;
+        color: var(--fg-color) !important;
+        background-color: var(--bg-sidebar-color) !important;
+        font-size: 1em;
+        cursor: pointer;
+        font-weight: 700;
+        line-height: 100%;
+    }
+/*barrita majno*/
+
+.border-grow {
+    position: relative;
+}
+
+    .border-grow::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 1.7px; /* Alto del borde inferior */
+        background-color: #007bff; /* Color del borde inferior */
+        transform: translateX(-50%);
+        transition: width 0.3s ease-in-out; /* Añade una transición para el crecimiento suave */
+    }
+
+    .border-grow:hover::before {
+        width: 100%; /* Aumenta el ancho al 100% al pasar el mouse */
+    }
+/* Clase para aplicar efecto de fondo que crece desde el centro */
+.background-grow {
+    position: relative;
+    overflow: hidden;
+}
+
+    .background-grow::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(208, 208, 208, 0.3); /* Nuevo color de fondo */
+        border-radius: 50%; /* Hace que el fondo sea un círculo */
+        transform: translate(-50%, -50%);
+        transition: width 0.5s ease-in-out, height 0.3s ease-in-out, background 0.3s ease-in-out; /* Añade transiciones para el crecimiento suave y cambio de color */
+    }
+
+    .background-grow:hover::before {
+        width: 200%;
+        height: 200%;
+    }
+
+.menu {
+    grid-template-columns: repeat(auto-fit,calc(100% / 6));
+    grid-template-rows: auto;
+    z-index: 1;
+    grid-template-areas:
+        "header header header header header ";
+}
+
+    .menu .item {
+/*        z-index: 1;*/
+    }

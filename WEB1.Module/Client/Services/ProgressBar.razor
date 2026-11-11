@@ -1,0 +1,15 @@
+@namespace WEB1.Module.Client.Services
+
+<div class="progress @clases @Class" role="progressbar" aria-valuenow="@PorcentajeValue" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar progress-bar-striped progress-bar-animated @ColorClass" style="width: @($"{PorcentajeValue}%");"></div>
+</div>
+
+@code {
+    [Parameter] public int Porcentaje { get; set; }
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public string clases { get; set; } = string.Empty;
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public string ColorClass { get; set; } = "bg-primary";
+
+    private int PorcentajeValue => Value.HasValue ? Value.Value : Porcentaje;
+}

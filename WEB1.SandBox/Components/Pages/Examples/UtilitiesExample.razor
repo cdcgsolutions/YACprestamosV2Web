@@ -1,0 +1,185 @@
+@page "/examples/utilities"
+@using MudBlazor
+@using WEB1.Module.Client.Services
+@inject LayoutService LayoutService
+@inject FloatingMessage FloatingMessage
+@inject FocusedMessage FocusedMessage
+@inject IDialogService DialogService
+
+<PageTitle>Ejemplo de Utilidades - Mensajes y Modales</PageTitle>
+
+<div class="container-fluid p-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">Utilidades de Mensajes y Confirmaciones</h2>
+        <p class="text-muted">Demostración estándar de <code>FloatingMessage</code> (Toastr) para notificaciones y <code>FocusedMessage</code> (SweetAlert2) para alertas y confirmaciones.</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- 1. FloatingMessage (Toastr) -->
+        <div class="col-md-6">
+            <MudCard Elevation="2" Class="rounded-xl pa-4 h-100">
+                <MudText Typo="Typo.h6" Class="mb-2">FloatingMessage (Notificaciones Toastr)</MudText>
+                <p class="text-muted small mb-3">Mensajes flotantes no invasivos para feedback inmediato de operaciones.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => FloatingMessage.Success("Datos guardados con éxito.", "Operación Exitosa"))">Éxito</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => FloatingMessage.Error("Error al procesar la solicitud.", "Fallo"))">Error</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => FloatingMessage.Warning("Atención con este registro antes de continuar.", "Advertencia"))">Advertencia</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => FloatingMessage.Info("Nueva actualización disponible en el sistema.", "Información"))">Info</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => FloatingMessage.ClearAsync())">Limpiar Todo</MudButton>
+                </div>
+            </MudCard>
+        </div>
+
+        <!-- 2. FocusedMessage (SweetAlert2) -->
+        <div class="col-md-6">
+            <MudCard Elevation="2" Class="rounded-xl pa-4 h-100">
+                <MudText Typo="Typo.h6" Class="mb-2">FocusedMessage (Modales y Confirmaciones)</MudText>
+                <p class="text-muted small mb-3">Alertas centradas y confirmaciones interactivas Sí / No con SweetAlert2.</p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => FocusedMessage.Info("Información", "Este es un mensaje modal centrado con FocusedMessage."))">
+                        Alerta Info
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => FocusedMessage.Success("Completado", "El proceso se ha ejecutado satisfactoriamente."))">
+                        Alerta Éxito
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OpenSweetAlertConfirm">
+                        Confirmación Sí / No
+                    </MudButton>
+                </div>
+                <div class="alert alert-info py-2 px-3 mb-0 small rounded-3">
+                    Último resultado de confirmación: <strong>@_sweetAlertResult</strong>
+                </div>
+            </MudCard>
+        </div>
+
+        <!-- 3. AppModal (Modal Bootstrap Nativo Recreado) -->
+        <div class="col-md-6">
+            <MudCard Elevation="2" Class="rounded-xl pa-4 h-100">
+                <MudText Typo="Typo.h6" Class="mb-2">AppModal (Modal Nativo Recreado)</MudText>
+                <p class="text-muted small mb-3">Componente modal con header, body, footer, iconos y control total.</p>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button class="btn btn-primary rounded-pill px-4" @onclick="AbrirAppModal">
+                        <i class="bi bi-window me-1"></i> Abrir AppModal
+                    </button>
+                </div>
+            </MudCard>
+        </div>
+
+        <!-- 5. GenericDragAndDrop (Carga y Subida de Archivos) -->
+        <div class="col-12">
+            <MudCard Elevation="2" Class="rounded-xl pa-4">
+                <MudText Typo="Typo.h6" Class="mb-2">GenericDragAndDrop (Arrastrar y Soltar Archivos)</MudText>
+                <p class="text-muted small mb-3">Componente nativo para carga individual o múltiple de archivos con barra de progreso, validación de tipo y peso.</p>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-2 small text-body">Modo Múltiple (Documentos e Imágenes)</h6>
+                        <GenericDragAndDrop Cantidad="archivo.multiple" 
+                                            AcceptFile="Accept.all" 
+                                            MaxSize="10" 
+                                            MinHeight="200px" 
+                                            FileCharged="OnFilesUploaded" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-2 small text-body">Modo Único (Imagen)</h6>
+                        <GenericDragAndDrop Cantidad="archivo.unico" 
+                                            AcceptFile="Accept.imagen" 
+                                            MaxSize="5" 
+                                            MinHeight="200px" 
+                                            FileCharged="OnSingleFileUploaded" />
+                    </div>
+                </div>
+            </MudCard>
+        </div>
+    </div>
+</div>
+
+<!-- Instancia de AppModal de Prueba -->
+<AppModal @ref="_appModal" 
+          Title="Edición de Registro" 
+          TitleIcon="bi bi-pencil-square" 
+          ModalSize="SizeModal.Default" 
+          Centered="true" 
+          OnSubmit="GuardarModal">
+    <div class="p-2">
+        <label class="form-label fw-bold small">Nombre del Elemento</label>
+        <input type="text" class="form-control mb-3" @bind="_modalInput" placeholder="Ingresa un valor..." />
+        <div class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+            <i class="bi bi-info-circle me-1"></i> Este modal utiliza <code>AppModal</code> creado en <code>WEB1.Module.Client.Services</code>.
+        </div>
+    </div>
+</AppModal>
+
+@code {
+    private string _sweetAlertResult = "Ninguno";
+    private AppModal? _appModal;
+    private string _modalInput = "Registro de Ejemplo";
+
+    protected override void OnInitialized()
+    {
+        LayoutService.SetTitle("Ejemplos de Utilidades");
+    }
+
+    private async Task AbrirAppModal()
+    {
+        if (_appModal != null)
+        {
+            await _appModal.OpenModal();
+        }
+    }
+
+    private async Task GuardarModal()
+    {
+        if (_appModal != null)
+        {
+            await _appModal.CloseModal();
+            await FloatingMessage.Success($"Guardado exitoso: {_modalInput}", "AppModal");
+        }
+    }
+
+    private async Task OpenSweetAlertConfirm()
+    {
+        bool result = await FocusedMessage.Confirm("¿Deseas confirmar la acción?", "Esta operación interactiva utiliza SweetAlert2.");
+        _sweetAlertResult = result ? "Confirmado (Sí)" : "Cancelado (No)";
+        
+        if (result)
+        {
+            await FloatingMessage.Success("Acción confirmada por el usuario.");
+        }
+        else
+        {
+            await FloatingMessage.Info("Acción cancelada.");
+        }
+    }
+
+    private async Task EliminarRegistroEjemplo()
+    {
+        bool confirmed = await FocusedMessage.Confirm("¿Eliminar registro?", "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.", "warning");
+        if (confirmed)
+        {
+            await FloatingMessage.Success("El elemento ha sido eliminado correctamente.");
+        }
+        else
+        {
+            await FloatingMessage.Info("Operación de eliminación cancelada.");
+        }
+    }
+
+    private async Task OnFilesUploaded(List<Archivos> uploadedFiles)
+    {
+        if (uploadedFiles.Any())
+        {
+            await FloatingMessage.Success($"Se cargaron {uploadedFiles.Count} archivo(s) correctamente.", "Archivos");
+        }
+    }
+
+    private async Task OnSingleFileUploaded(List<Archivos> uploadedFiles)
+    {
+        if (uploadedFiles.Any())
+        {
+            var f = uploadedFiles.First();
+            await FloatingMessage.Success($"Imagen cargada: {f.name}{f.extension} ({f.size} KB)", "Subida Completa");
+        }
+    }
+}

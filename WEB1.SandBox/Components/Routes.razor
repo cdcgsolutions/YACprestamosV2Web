@@ -1,0 +1,123 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject NavigationManager NavigationManager
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="new[] 
+    { 
+        typeof(WEB1.Module._Imports).Assembly,
+    }">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                <Authorizing>
+                    <div class="d-flex flex-column align-items-center justify-content-center min-vh-100 py-5">
+                        <div class="p-4 rounded-4 bg-body border shadow-xs text-center d-flex flex-column align-items-center" style="min-width: 280px;">
+                            <div class="spinner-border text-primary mb-3" style="width: 2.5rem; height: 2.5rem;" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <span class="fw-semibold text-body">Verificando sesión...</span>
+                            <span class="text-secondary small mt-1">Por favor espera un momento</span>
+                        </div>
+                    </div>
+                </Authorizing>
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated == false)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center py-5 px-3" style="min-height: 70vh;">
+                            <div class="error-container text-center p-4 p-md-5 rounded-4 bg-body border border-warning-subtle shadow-sm position-relative overflow-hidden" style="max-width: 560px; width: 100%;">
+                                <div class="position-absolute top-0 start-0 end-0 bg-warning" style="height: 4px;"></div>
+
+                                <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                                    <div class="error-icon-box bg-warning-subtle text-warning rounded-4 d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-shield-lock-fill fs-2"></i>
+                                    </div>
+                                    <span class="error-code-text text-warning fw-bolder">403</span>
+                                </div>
+
+                                <h3 class="fw-bold text-body mt-3 mb-2">Acceso No Autorizado</h3>
+                                <p class="text-secondary small mb-4 mx-auto" style="max-width: 440px;">
+                                    No dispones de los permisos o privilegios necesarios para acceder a esta sección.
+                                </p>
+
+                                <div class="d-flex flex-wrap justify-content-center gap-3 pt-2">
+                                    <button class="btn btn-warning text-dark rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-xs fw-semibold"
+                                            @onclick="@(() => NavigationManager.NavigateTo("/"))">
+                                        <i class="bi bi-house-door-fill"></i> Ir al Inicio
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <PageTitle>Error 404 • Página No Encontrada</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <div class="d-flex align-items-center justify-content-center py-5 px-3" style="min-height: 70vh;">
+                    <div class="error-container text-center p-4 p-md-5 rounded-4 bg-body border border-danger-subtle shadow-sm position-relative overflow-hidden" style="max-width: 580px; width: 100%;">
+                        <!-- Línea roja superior distintiva de error -->
+                        <div class="position-absolute top-0 start-0 end-0 bg-danger" style="height: 4px;"></div>
+
+                        <!-- Icono de Error y Número 404 en Rojo -->
+                        <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                            <div class="error-icon-box bg-danger-subtle text-danger rounded-4 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                            </div>
+                            <span class="error-code-text text-danger fw-bolder">404</span>
+                        </div>
+
+                        <!-- Título y Descripción Clara de Error -->
+                        <h3 class="fw-bold text-body mt-3 mb-2">Página No Encontrada</h3>
+                        <p class="text-secondary small mb-4 mx-auto" style="max-width: 440px;">
+                            Lo sentimos, la ruta solicitada no existe o el recurso fue removido temporalmente del servidor.
+                        </p>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-flex flex-wrap justify-content-center gap-3 pt-2">
+                            <button class="btn btn-danger rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-xs fw-semibold"
+                                    @onclick="@(() => NavigationManager.NavigateTo("/"))">
+                                <i class="bi bi-house-door-fill"></i> Volver al Inicio
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2"
+                                    @onclick="@(() => NavigationManager.NavigateTo("/module/examples"))">
+                                <i class="bi bi-arrow-left"></i> Volver al Módulo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+<style>
+    .error-container {
+        border-radius: 24px !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .error-container:hover {
+        box-shadow: 0 12px 30px rgba(220, 53, 69, 0.08) !important;
+    }
+
+    .error-icon-box {
+        width: 58px;
+        height: 58px;
+    }
+
+    .error-code-text {
+        font-size: 3.8rem;
+        line-height: 1;
+        letter-spacing: -1.5px;
+        font-weight: 800 !important;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+    }
+</style>

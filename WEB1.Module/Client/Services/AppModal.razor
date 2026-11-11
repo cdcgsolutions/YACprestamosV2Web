@@ -1,0 +1,153 @@
+@namespace WEB1.Module.Client.Services
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<div class="modal fade" id="@ModalId" tabindex="-1" aria-labelledby="@($"{ModalId}Label")" aria-hidden="true" data-bs-backdrop="@Backdrop" data-bs-keyboard="@Keyboard">
+    <div class="modal-dialog @GetSizeClass() @(Centered ? "modal-dialog-centered" : "") @(Scrollable == true ? "modal-dialog-scrollable" : "")">
+        <div class="modal-content rounded-4 border shadow-sm">
+            @if (HeaderVisible)
+            {
+                <div class="modal-header">
+                    @if (HeaderContent != null)
+                    {
+                        @HeaderContent
+                    }
+                    else
+                    {
+                        <h5 class="modal-title d-flex align-items-center gap-2 fw-bold" id="@($"{ModalId}Label")">
+                            @if (!string.IsNullOrWhiteSpace(TitleIcon))
+                            {
+                                <i class="@TitleIcon"></i>
+                            }
+                            @if (ShowTitle && !string.IsNullOrWhiteSpace(Title))
+                            {
+                                <span>@Title</span>
+                            }
+                        </h5>
+                    }
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseModal"></button>
+                </div>
+            }
+
+            <div class="modal-body">
+                @ChildContent
+            </div>
+
+            @if (FooterVisible)
+            {
+                <div class="modal-footer">
+                    @if (FooterContent != null)
+                    {
+                        @FooterContent
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary px-4" @onclick="CloseModal">Cerrar</button>
+                        @if (OnSubmit.HasDelegate)
+                        {
+                            <button type="button" class="btn btn-primary px-4" @onclick="HandleSubmit">Aceptar</button>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string TitleIcon { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool ShowTitle { get; set; } = true;
+
+    [Parameter]
+    public bool HeaderVisible { get; set; } = true;
+
+    [Parameter]
+    public bool FooterVisible { get; set; } = true;
+
+    [Parameter]
+    public bool Centered { get; set; } = true;
+
+    [Parameter]
+    public bool? Scrollable { get; set; } = false;
+
+    [Parameter]
+    public bool? LockClose { get; set; } = false;
+
+    [Parameter]
+    public SizeModal? ModalSize { get; set; } = SizeModal.Default;
+
+    [Parameter]
+    public RenderFragment? HeaderContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string _generatedId = "modal_" + Guid.NewGuid().ToString("N");
+    public string ModalId => !string.IsNullOrWhiteSpace(Id) ? Id : _generatedId;
+
+    public string Backdrop => LockClose == true ? "static" : "true";
+    public string Keyboard => LockClose == true ? "false" : "true";
+
+    public async Task OpenModal()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("openModal", ModalId, LockClose == true);
+        }
+        catch (Exception)
+        {
+            // Prerender protection
+        }
+    }
+
+    public async Task CloseModal()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("closeModal", ModalId);
+            if (OnClose.HasDelegate)
+            {
+                await OnClose.InvokeAsync();
+            }
+        }
+        catch (Exception)
+        {
+            // Prerender protection
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync();
+        }
+    }
+
+    private string GetSizeClass() => ModalSize switch
+    {
+        SizeModal.Small => "modal-sm",
+        SizeModal.Large => "modal-lg",
+        SizeModal.ExtraLarge => "modal-xl",
+        SizeModal.Fullscreen => "modal-fullscreen",
+        _ => ""
+    };
+}

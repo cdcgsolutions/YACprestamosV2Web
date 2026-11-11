@@ -1,0 +1,127 @@
+@page "/login"
+@layout LoginLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using MudBlazor
+@using WEB1.SandBox.DTOs
+@using WEB1.SandBox.Services
+@using WEB1.Module.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject FloatingMessage FloatingMessage
+
+<PageTitle>Login</PageTitle>
+
+<div class="login-container">
+    <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center min-vh-100 py-6">
+        <MudCard Elevation="8" Class="pa-6 rounded-xl w-100" Style="max-width: 440px; backdrop-filter: blur(10px);">
+            <div class="text-center mb-6">
+                <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mb-3 mx-auto" Style="width: 64px; height: 64px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />
+                </MudAvatar>
+                <MudText Typo="Typo.h5" Class="fw-bold">Bienvenido</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Inicia sesión con tu cuenta</MudText>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4 rounded-lg" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <MudTextField @bind-Value="_loginModel.UserName"
+                                  Label="Usuario o Correo"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person"
+                                  For="@(() => _loginModel.UserName)"
+                                  Disabled="@_isProcessing"
+                                  FullWidth="true" />
+                </div>
+
+                <div class="mb-4">
+                    <MudTextField @bind-Value="_loginModel.Password"
+                                  Label="Contraseña"
+                                  Variant="Variant.Outlined"
+                                  InputType="@_passwordInputType"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_passwordIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility"
+                                  For="@(() => _loginModel.Password)"
+                                  Disabled="@_isProcessing"
+                                  FullWidth="true" />
+                </div>
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           FullWidth="true"
+                           Class="py-3 rounded-lg fw-bold"
+                           Disabled="@_isProcessing">
+                    @if (_isProcessing)
+                    {
+                        <MudProgressCircular Class="ms-n1 me-2" Size="Size.Small" Indeterminate="true" />
+                        <span>Autenticando...</span>
+                    }
+                    else
+                    {
+                        <span>Iniciar Sesión</span>
+                    }
+                </MudButton>
+            </EditForm>
+        </MudCard>
+    </MudContainer>
+</div>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+@code {
+    private LoginDTO _loginModel = new();
+    private bool _isProcessing = false;
+    private string? _errorMessage;
+
+    private bool _showPassword = false;
+    private InputType _passwordInputType = InputType.Password;
+    private string _passwordIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+        _passwordInputType = _showPassword ? InputType.Text : InputType.Password;
+        _passwordIcon = _showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+    }
+
+    private async Task HandleLogin()
+    {
+        _isProcessing = true;
+        _errorMessage = null;
+
+        var (success, message) = await AuthService.LoginAsync(_loginModel);
+
+        if (success)
+        {
+            await FloatingMessage.Success(message);
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            _errorMessage = message;
+            await FloatingMessage.Error(message);
+        }
+
+        _isProcessing = false;
+    }
+}

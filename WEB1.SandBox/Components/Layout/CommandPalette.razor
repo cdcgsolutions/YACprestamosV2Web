@@ -1,0 +1,169 @@
+@inject NavigationManager Navigation
+
+@if (IsVisible)
+{
+    <div class="command-palette-overlay" @onclick="Close">
+        <div class="command-palette-container" @onclick:stopPropagation>
+            <div class="palette-header">
+                <i class="bi bi-search text-secondary me-2"></i>
+                <input @ref="searchInput" 
+                       type="text" 
+                       class="palette-input" 
+                       placeholder="Buscar interfaces, clientes o acciones..." 
+                       @bind="SearchText" 
+                       @bind:event="oninput" 
+                       @onkeyup="HandleKeyUp" />
+                <button class="btn-close" @onclick="Close"></button>
+            </div>
+            
+            <div class="palette-body">
+                @if (FilteredItems.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in FilteredItems)
+                        {
+                            <li class="list-group-item list-group-item-action cursor-pointer @(SelectedIndex == FilteredItems.IndexOf(item) ? "active-item" : "")"
+                                @onclick="() => NavigateTo(item)">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-box me-3">
+                                        <i class="@item.icon"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">@item.name</div>
+                                        <small class="text-muted"> @GetModuleNameByInterface(item)</small>
+                                    </div>
+                                    @if (SelectedIndex == FilteredItems.IndexOf(item))
+                                    {
+                                        <i class="bi bi-arrow-return-left ms-auto text-primary"></i>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                else if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-emoji-frown fs-4 d-block mb-2"></i>
+                        No se encontraron resultados para "@SearchText"
+                    </div>
+                }
+                else
+                {
+                     <div class="p-4 text-center text-muted small">
+                        Escribe para buscar...
+                    </div>
+                }
+            </div>
+            
+            <div class="palette-footer">
+                <span class="badge bg-light text-dark border me-1">↑↓</span> para navegar
+                <span class="badge bg-light text-dark border mx-1">Enter</span> para seleccionar
+                <span class="badge bg-light text-dark border ms-1">Esc</span> para cerrar
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<ModuleDTO> Modules { get; set; } = new();
+    
+    private bool IsVisible { get; set; }
+    private string SearchText { get; set; } = "";
+    private List<InterfaceDTO> AllItems { get; set; } = new();
+    private List<InterfaceDTO> FilteredItems { get; set; } = new();
+    private int SelectedIndex { get; set; } = 0;
+    private ElementReference searchInput;
+
+    public async Task Open()
+    {
+        IsVisible = true;
+        SearchText = "";
+        FlattenItems();
+        FilterItems();
+        StateHasChanged();
+        // Focus typically requires JS, simple here
+        await Task.Delay(50); // Give time to render
+        try { await searchInput.FocusAsync(); } catch {}
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private void FlattenItems()
+    {
+        AllItems = new List<InterfaceDTO>();
+        if (Modules != null)
+        {
+            foreach (var module in Modules)
+            {
+                if (module.interfaceList != null)
+                {
+                    AllItems.AddRange(module.interfaceList);
+                }
+            }
+        }
+    }
+
+    //get name module by interface 
+
+    private string GetModuleNameByInterface(InterfaceDTO item)
+    {
+        var module = Modules.FirstOrDefault(m => m.interfaceList != null && m.interfaceList.Exists(x=> x.code ==item.code));
+        return module != null ? module.name : "Desconocido";
+    }
+
+    private void FilterItems()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            FilteredItems = AllItems.Take(5).ToList(); // Show recent or top 5 by default
+        }
+        else
+        {
+            FilteredItems = AllItems
+                .Where(i => i.name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                .Take(10)
+                .ToList();
+        }
+        SelectedIndex = 0;
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowDown")
+        {
+            SelectedIndex = Math.Min(SelectedIndex + 1, FilteredItems.Count - 1);
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            SelectedIndex = Math.Max(SelectedIndex - 1, 0);
+        }
+        else if (e.Key == "Enter")
+        {
+            if (FilteredItems.Any() && SelectedIndex >= 0 && SelectedIndex < FilteredItems.Count)
+            {
+                NavigateTo(FilteredItems[SelectedIndex]);
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            Close();
+        }
+        else
+        {
+            // Filter is handled by @bind:event="oninput" calling the setter? 
+            // Actually bind:event="oninput" updates the property, we need to call FilterItems
+             FilterItems();
+        }
+    }
+
+    private void NavigateTo(InterfaceDTO item)
+    {
+        Close();
+        Navigation.NavigateTo(item.path);
+    }
+}

@@ -1,0 +1,158 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using WEB1.SandBox.DTOs
+@using WEB1.SandBox.Services
+@using WEB1.Module.Client.Services
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+@inject LayoutService LayoutService
+@inject ModuleService ModuleService
+@inject IConfiguration Configuration
+
+<PageTitle>Inicio</PageTitle>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Header con Saludo -->
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1 text-body">¿Qué vamos a gestionar hoy?</h1>
+        <p class="text-secondary mb-0 small">Selecciona un módulo para acceder a tus herramientas.</p>
+    </div>
+
+    <!-- Grid de Módulos (Aspecto Shell) -->
+    @if (_isLoading)
+    {
+        <div class="text-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <p class="mt-3 text-muted">Cargando módulos disponibles...</p>
+        </div>
+    }
+    else if (_modules != null && _modules.Any())
+    {
+        <div class="row g-4">
+            @for (int i = 0; i < _modules.Count; i++)
+            {
+                var module = _modules[i];
+                var colorClass = GetBootstrapColorClass(i);
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                    <div class="shell-module-card h-100 p-4 rounded-4 bg-body border shadow-xs cursor-pointer d-flex flex-column" 
+                         @onclick="@(() => NavigateToModule(module.path))">
+                        
+                        <!-- Icono en Badge con Color Dinámico de Bootstrap -->
+                        <div class="module-icon-badge mb-4 d-flex align-items-center justify-content-center @colorClass">
+                            <i class="@module.icon fs-3"></i>
+                        </div>
+
+                        <!-- Título del Módulo -->
+                        <h5 class="fw-bold mb-1 text-body text-truncate" title="@module.name">
+                            @module.name
+                        </h5>
+
+                        <!-- Subtítulo de interfaces -->
+                        <p class="text-secondary small mb-4">
+                            @(module.interfaceList.Count == 1 ? "1 interfaz disponible" : $"{module.interfaceList.Count} interfaces disponibles")
+                        </p>
+
+                        <!-- Barra Inferior: Pill Badge y Flecha -->
+                        <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+                            <span class="shell-pill-badge">
+                                @(module.interfaceList.Count == 1 ? "1 interfaz" : $"{module.interfaceList.Count} interfaces")
+                            </span>
+                            <i class="bi bi-arrow-right fs-5 text-secondary card-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 bg-body border rounded-4">
+            <i class="bi bi-folder-x fs-1 text-muted d-block mb-2"></i>
+            <h5 class="fw-bold text-body">No hay módulos disponibles</h5>
+            <p class="text-secondary small mb-0">No se encontraron módulos configurados o autorizados para tu rol.</p>
+        </div>
+    }
+</div>
+
+<style>
+    .shell-module-card {
+        border-radius: 20px !important;
+        border: 1px solid rgba(0, 0, 0, 0.07) !important;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .shell-module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.07) !important;
+        border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
+    }
+
+    .shell-module-card:hover .card-arrow {
+        color: var(--bs-primary) !important;
+        transform: translateX(4px);
+    }
+
+    .module-icon-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        flex-shrink: 0;
+    }
+
+    .shell-pill-badge {
+        background-color: var(--bs-tertiary-bg);
+        color: var(--bs-secondary-color);
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 500;
+    }
+
+    .card-arrow {
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+</style>
+
+@code {
+    private List<ModuleDTO> _modules = new();
+    private bool _isLoading = true;
+
+    private readonly string[] _bootstrapColorClasses = new[]
+    {
+        "bg-primary-subtle text-primary",
+        "bg-success-subtle text-success",
+        "bg-danger-subtle text-danger",
+        "bg-warning-subtle text-warning",
+        "bg-info-subtle text-info",
+        "bg-secondary-subtle text-secondary"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.SetTitle("Inicio");
+        _isLoading = true;
+        var modules = await ModuleService.GetModulesAsync();
+        _modules = modules.Where(m => m.status).ToList();
+        _isLoading = false;
+    }
+
+    private string GetBootstrapColorClass(int index)
+    {
+        return _bootstrapColorClasses[index % _bootstrapColorClasses.Length];
+    }
+
+    private void NavigateToModule(string path)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            NavigationManager.NavigateTo($"/module/{path.Trim('/')}");
+        }
+    }
+}
