@@ -24,25 +24,24 @@
                         </div>
                         <div>
                             <div class="fs-4 fw-bold tracking-wide text-white">YAC. PRÉSTAMOS</div>
-                            <small class="text-white-50">Portal Administrativo</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="position-relative z-2 pt-4 border-top border-light border-opacity-10 text-white-50 small d-flex justify-content-between">
                     <span>© @DateTime.Now.Year YAC-Préstamos</span>
-                    <span class="text-primary fw-semibold">v2.0</span>
+                    <span class="text-primary fw-semibold">v1.0</span>
                 </div>
             </div>
 
-            <!-- Columna Derecha: Formulario de Autenticación con MudBlazor -->
-            <div class="col-12 col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-body">
+            <!-- Columna Derecha: Formulario con Colores Estáticos Nítidos -->
+            <div class="col-12 col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                 <div class="text-center mb-4">
                     <div class="brand-icon-box mx-auto mb-3 shadow d-lg-none">
                         <i class="fa-solid fa-hand-holding-dollar fs-2 text-primary"></i>
                     </div>
-                    <h4 class="fw-bold text-body mb-1">Bienvenido</h4>
-                    <p class="text-body-secondary small mb-0">Ingresa tus credenciales para acceder al sistema</p>
+                    <h4 class="fw-bold mb-1" style="color: #0f172a;">Bienvenido</h4>
+                    <p class="small mb-0" style="color: #64748b;">Ingresa tus credenciales para acceder al sistema</p>
                 </div>
 
                 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -107,9 +106,9 @@
                 </EditForm>
 
                 <!-- Pie de página con créditos CDCGsolutions -->
-                <div class="text-center mt-4 pt-3 border-top border-secondary-subtle">
-                    <div class="text-body-secondary small" style="font-size: 0.78rem;">
-                        &copy; @DateTime.Now.Year YAC-Préstamos &bull; Desarrollado por <strong>CDCGsolutions</strong>
+                <div class="text-center mt-4 pt-3 border-top border-light-subtle">
+                    <div class="small" style="font-size: 0.78rem; color: #64748b;">
+                        &copy; @DateTime.Now.Year &bull; Desarrollado por <strong style="color: #0f172a;">CDCGsolutions</strong>
                     </div>
                 </div>
             </div>
@@ -124,13 +123,13 @@
     }
 
     .login-card {
-        background-color: var(--bs-body-bg, #1e2530);
+        background-color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
 
     .login-brand-side {
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.82)), url('/brand/loginOffice.png') center/cover no-repeat;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(0, 0, 0, 0.08);
         min-height: 480px;
     }
 
@@ -150,21 +149,45 @@
         letter-spacing: 1.5px;
     }
 
-    /* Solución definitiva para campos autocompletados por Chrome / Edge */
+    /* Colores estáticos negros para labels e inputs en fondo blanco */
+    .custom-login-field input {
+        color: #0f172a !important;
+        font-weight: 500 !important;
+    }
+
+    .custom-login-field label,
+    .custom-login-field .mud-input-label,
+    .custom-login-field .mud-input-label-outlined {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .custom-login-field .mud-input-outlined-border {
+        border-color: #cbd5e1 !important;
+    }
+
+    .custom-login-field:hover .mud-input-outlined-border {
+        border-color: #64748b !important;
+    }
+
+    .custom-login-field.mud-input-focused .mud-input-outlined-border {
+        border-color: #0d6efd !important;
+    }
+
+    .custom-login-field.mud-input-focused label,
+    .custom-login-field.mud-input-focused .mud-input-label-outlined {
+        color: #0d6efd !important;
+    }
+
+    /* Corrección de autocompletado en fondo blanco */
     .custom-login-field input:-webkit-autofill,
     .custom-login-field input:-webkit-autofill:hover, 
     .custom-login-field input:-webkit-autofill:focus, 
     .custom-login-field input:-webkit-autofill:active {
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
-        -webkit-text-fill-color: var(--mud-palette-text-primary, inherit) !important;
-        caret-color: var(--mud-palette-text-primary, inherit) !important;
+        -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+        -webkit-text-fill-color: #0f172a !important;
+        caret-color: #0f172a !important;
         transition: background-color 5000s ease-in-out 0s !important;
-        box-shadow: none !important;
-    }
-
-    .custom-login-field .mud-input-outlined-border {
-        border-color: rgba(var(--bs-body-color-rgb, 120, 120, 120), 0.3) !important;
     }
 </style>
 
