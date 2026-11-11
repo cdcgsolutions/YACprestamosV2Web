@@ -1,0 +1,393 @@
+@page "/clientes"
+@using MudBlazor
+@using WEB1.Module.DTOs
+@using WEB1.Module.CLIENT.RN
+@using WEB1.Module.Client.Services
+@inject DataMasterApi Api
+@inject FloatingMessage msj
+@inject LayoutService LayoutService
+
+<PageTitle>Clientes | YAC-Préstamos</PageTitle>
+
+@if (_cargando)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <h6 class="mt-3 text-body fw-bold text-uppercase" style="letter-spacing: 1px;">Cargando Clientes...</h6>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid mt-3">
+        <!-- Cabecera con Botón de Retroceso estilo SIS.INV.WEB -->
+        <div class="card shadow-sm border-0 bg-body mb-2">
+            <div class="d-flex align-items-center justify-content-center pt-2 px-3 position-relative">
+                <div class="position-absolute start-0 ps-3">
+                    <a href="/" class="btn btn-link text-body p-0" title="Volver al Inicio">
+                        <i class="fa-solid fa-circle-arrow-left fs-5"></i>
+                    </a>
+                </div>
+                <span class="text-uppercase fw-bold text-body" style="letter-spacing: 1px;">
+                    Gestión de Clientes
+                </span>
+            </div>
+            <div class="card-body p-2 px-3">
+                <div class="row g-2 align-items-center justify-content-between">
+                    <div class="col-12 col-md-5">
+                        <MudTextField T="string"
+                                      Value="_busqueda"
+                                      ValueChanged="OnSearchChanged"
+                                      Placeholder="Buscar por nombre, celular o correo..."
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      Clearable="true"
+                                      UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "off" }, { "name", "filtro_busqueda_clientes" } })"
+                                      Class="bg-body text-body"
+                                      Style="font-size: 0.85rem;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      AdornmentColor="Color.Primary" />
+                    </div>
+
+                    <div class="col-12 col-md-auto d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3 py-2 d-flex align-items-center gap-1 w-100 justify-content-center justify-content-md-start"
+                                @onclick="AbrirModalCrear">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span class="fw-bold">Nuevo Cliente</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor Responsivo estilo SIS.INV.WEB (Tabla en Escritorio / Tarjetas en Móvil) -->
+        <div class="card shadow-sm border-0 bg-body mb-3">
+            <!-- Vista Escritorio: Tabla -->
+            <div class="card-body p-0 d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="bg-body-secondary text-body fw-semibold">
+                            <tr>
+                                <th class="ps-3 py-3" style="width: 80px;">ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Contacto</th>
+                                <th>Estado Civil</th>
+                                <th>Dirección</th>
+                                <th class="text-center" style="width: 120px;">Estado</th>
+                                <th class="text-center pe-3" style="width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ClientesPaginados.Any())
+                            {
+                                @foreach (var cliente in ClientesPaginados)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                             <span class="fw-bold text-primary font-monospace">#@cliente.IdCliente</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-body">@cliente.Nombre</div>
+                                            @if (cliente.FechaNacimiento.HasValue)
+                                            {
+                                                <small class="text-body-secondary"><i class="fa-solid fa-calendar-day me-1"></i>Nac.: @cliente.FechaNacimiento.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div><i class="fa-solid fa-phone me-1 text-primary"></i>@cliente.Celular</div>
+                                            @if (!string.IsNullOrEmpty(cliente.Correo))
+                                            {
+                                                <small class="text-body-secondary"><i class="fa-solid fa-envelope me-1"></i>@cliente.Correo</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-body-tertiary text-body border px-2 py-1">@cliente.EstadoCivil</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-body-secondary small">@(string.IsNullOrWhiteSpace(cliente.Direccion) ? "-" : cliente.Direccion)</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" 
+                                                    class="btn btn-sm @(cliente.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2"
+                                                    style="font-size: 0.72rem;"
+                                                    @onclick="() => CambiarEstado(cliente)">
+                                                @(cliente.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                            </button>
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-outline-primary btn-sm border-0" title="Editar Cliente"
+                                                        @onclick="() => AbrirModalEditar(cliente)">
+                                                    <i class="fa-solid fa-pen-to-square fs-6"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-body-secondary">
+                                        <i class="fa-solid fa-users fs-1 d-block opacity-50 mb-2"></i>
+                                        <span>No se encontraron clientes registrados.</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vista Móvil: Tarjetas individuales estilo SIS.INV.WEB -->
+            <div class="card-body p-2 d-block d-md-none bg-body-tertiary">
+                @if (ClientesPaginados.Any())
+                {
+                    @foreach (var cliente in ClientesPaginados)
+                    {
+                        <div class="card mb-2 border-0 shadow-sm bg-body rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary-subtle">
+                                    <span class="fw-bold text-primary font-monospace" style="font-size: 0.85rem;">#@cliente.IdCliente</span>
+                                    <button type="button" 
+                                            class="btn btn-sm @(cliente.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2" 
+                                            style="font-size: 0.68rem;" 
+                                            @onclick="() => CambiarEstado(cliente)">
+                                        @(cliente.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                    </button>
+                                </div>
+                                <div class="fw-bold text-body fs-6 mb-1">@cliente.Nombre</div>
+                                <div class="text-body-secondary small mb-1">
+                                    <i class="fa-solid fa-phone me-1 text-primary"></i>@cliente.Celular
+                                    @if (!string.IsNullOrEmpty(cliente.Correo))
+                                    {
+                                        <span class="ms-2"><i class="fa-solid fa-envelope me-1 text-primary"></i>@cliente.Correo</span>
+                                    }
+                                </div>
+                                @if (cliente.FechaNacimiento.HasValue)
+                                {
+                                    <div class="text-body-secondary small mb-1">
+                                        <i class="fa-solid fa-calendar-day me-1 text-primary"></i>Nac.: @cliente.FechaNacimiento.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(cliente.Direccion))
+                                {
+                                    <div class="text-body-secondary small mb-2 text-truncate" title="@cliente.Direccion">
+                                        <i class="fa-solid fa-location-dot me-1 text-primary"></i>@cliente.Direccion
+                                    </div>
+                                }
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary-subtle">
+                                    <span class="badge bg-body-tertiary text-body border px-2 py-1">
+                                        @cliente.EstadoCivil
+                                    </span>
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 py-1" @onclick="() => AbrirModalEditar(cliente)">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-body-secondary bg-body rounded-3">
+                        <i class="fa-solid fa-users fs-2 d-block opacity-50 mb-2"></i>
+                        <span>No se encontraron clientes registrados.</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Paginación con MudPagination -->
+            @if (TotalPaginas > 0)
+            {
+                <div class="card-footer bg-body border-0 py-3 d-flex justify-content-center">
+                    <MudPagination Selected="_paginaActual"
+                                   SelectedChanged="OnPageChanged"
+                                   Count="TotalPaginas"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled" />
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal Componente sobre Componente estilo SIS.INV.WEB -->
+<AppModal @ref="ModalClienteRef" 
+          Id="modalCliente" 
+          Title="@(_esEdicion ? $"Editar Cliente #{_clienteModel.IdCliente}" : "Registro de Nuevo Cliente")" 
+          TitleIcon="fa-solid fa-address-card"
+          HeaderVisible="true" 
+          FooterVisible="false"
+          Centered="true">
+    <ModalCliente Cliente="_clienteModel"
+                  @bind-FechaNacimiento="_fechaNacimiento"
+                  EsEdicion="_esEdicion"
+                  Cargando="_guardando"
+                  OnSubmit="GuardarCliente"
+                  OnCancel="() => ModalClienteRef.CloseModal()" />
+</AppModal>
+
+@code {
+    private List<ClienteDTO> _clientes = new();
+    private bool _cargando = true;
+    private string _busqueda = "";
+    private int _paginaActual = 1;
+    private const int _tamanoPagina = 10;
+
+    private AppModal ModalClienteRef = default!;
+    private ClienteDTO _clienteModel = new();
+    private bool _esEdicion = false;
+    private DateTime? _fechaNacimiento;
+    private bool _guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.SetTitle("Gestión de Clientes");
+        await CargarClientes(esCargaInicial: true);
+    }
+
+    private async Task CargarClientes(bool esCargaInicial = false)
+    {
+        if (esCargaInicial)
+        {
+            _cargando = true;
+        }
+
+        try
+        {
+            var res = await Api.GetClientesAsync();
+            if (res.IsSuccess && res.Value != null)
+            {
+                _clientes = res.Value;
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cargar clientes");
+            }
+        }
+        catch (Exception ex)
+        {
+            await msj.ShowErrorMessage("Error al cargar clientes: " + ex.Message);
+        }
+        finally
+        {
+            _cargando = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private IEnumerable<ClienteDTO> ClientesFiltrados => _clientes.Where(c =>
+        string.IsNullOrWhiteSpace(_busqueda) ||
+        (!string.IsNullOrEmpty(c.Nombre) && c.Nombre.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)) ||
+        (!string.IsNullOrEmpty(c.Celular) && c.Celular.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)) ||
+        (!string.IsNullOrEmpty(c.Correo) && c.Correo.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)));
+
+    private IEnumerable<ClienteDTO> ClientesPaginados =>
+        ClientesFiltrados.Skip((_paginaActual - 1) * _tamanoPagina).Take(_tamanoPagina);
+
+    private int TotalPaginas => (int)Math.Ceiling((double)ClientesFiltrados.Count() / _tamanoPagina);
+
+    private void OnSearchChanged(string text)
+    {
+        _busqueda = text;
+        _paginaActual = 1;
+    }
+
+    private void OnPageChanged(int page)
+    {
+        _paginaActual = page;
+    }
+
+    private async Task AbrirModalCrear()
+    {
+        _esEdicion = false;
+        _clienteModel = new ClienteDTO { EstaHabilitado = true, EstadoCivil = "Soltero(a)" };
+        _fechaNacimiento = null;
+        await ModalClienteRef.OpenModal();
+    }
+
+    private async Task AbrirModalEditar(ClienteDTO cliente)
+    {
+        _esEdicion = true;
+        _clienteModel = new ClienteDTO
+        {
+            IdCliente = cliente.IdCliente,
+            Nombre = cliente.Nombre,
+            Celular = cliente.Celular,
+            Correo = cliente.Correo,
+            EstadoCivil = cliente.EstadoCivil,
+            FechaNacimiento = cliente.FechaNacimiento,
+            Direccion = cliente.Direccion,
+            EstaHabilitado = cliente.EstaHabilitado
+        };
+        _fechaNacimiento = cliente.FechaNacimiento.HasValue ? cliente.FechaNacimiento.Value.ToDateTime(TimeOnly.MinValue) : null;
+        await ModalClienteRef.OpenModal();
+    }
+
+    private async Task GuardarCliente()
+    {
+        if (string.IsNullOrWhiteSpace(_clienteModel.Nombre) || string.IsNullOrWhiteSpace(_clienteModel.Celular))
+        {
+            await msj.ShowWarningMessage("El nombre y el celular son requeridos.");
+            return;
+        }
+
+        if (_fechaNacimiento.HasValue)
+        {
+            _clienteModel.FechaNacimiento = DateOnly.FromDateTime(_fechaNacimiento.Value);
+        }
+
+        _guardando = true;
+        if (_esEdicion)
+        {
+            var res = await Api.ActualizarClienteAsync(_clienteModel.IdCliente, _clienteModel);
+            if (res.IsSuccess)
+            {
+                await ModalClienteRef.CloseModal();
+                await msj.ShowSuccessMessage("Cliente actualizado exitosamente.");
+                await CargarClientes(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al actualizar cliente.");
+            }
+        }
+        else
+        {
+            var res = await Api.CrearClienteAsync(_clienteModel);
+            if (res.IsSuccess)
+            {
+                await ModalClienteRef.CloseModal();
+                await msj.ShowSuccessMessage("Cliente registrado exitosamente.");
+                await CargarClientes(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al registrar cliente.");
+            }
+        }
+        _guardando = false;
+    }
+
+    private async Task CambiarEstado(ClienteDTO cliente)
+    {
+        var res = await Api.CambiarEstadoClienteAsync(cliente.IdCliente);
+        if (res.IsSuccess)
+        {
+            cliente.EstaHabilitado = !cliente.EstaHabilitado;
+            await msj.ShowInfoMessage($"Cliente {(cliente.EstaHabilitado ? "habilitado" : "deshabilitado")}");
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cambiar estado");
+        }
+    }
+}

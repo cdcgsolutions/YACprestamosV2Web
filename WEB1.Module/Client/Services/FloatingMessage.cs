@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 namespace WEB1.Module.Client.Services
 {
     /// <summary>
-    /// Servicio para mostrar notificaciones flotantes temporales (Toastr).
+    /// Servicio para mostrar notificaciones flotantes temporales (Toastr) idéntico a GPKepler.
     /// </summary>
     public class FloatingMessage
     {
@@ -13,6 +13,18 @@ namespace WEB1.Module.Client.Services
         {
             _jsRuntime = jsRuntime;
         }
+
+        public async Task ShowSuccessMessage(string message)
+            => await ShowAsync("success", message, "Éxito");
+
+        public async Task ShowErrorMessage(string message)
+            => await ShowAsync("error", message, "Error");
+
+        public async Task ShowWarningMessage(string message)
+            => await ShowAsync("warning", message, "Advertencia");
+
+        public async Task ShowInfoMessage(string message)
+            => await ShowAsync("info", message, "Información");
 
         public async Task Success(string message, string title = "Éxito")
             => await ShowAsync("success", message, title);

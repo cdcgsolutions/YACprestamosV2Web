@@ -94,6 +94,15 @@ function triggerFileDownload(fileName, url) {
     anchorElement.click();
     anchorElement.remove();
 }
+
+function descargarArchivoBase64(nombreArchivo, base64String) {
+    const link = document.createElement('a');
+    link.download = nombreArchivo;
+    link.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64String;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 window.addEventListener('dragstart', function (e) {
     event.dataTransfer.effectAllowed = "move";
 }, false);
@@ -130,183 +139,192 @@ function openModal(id, lockClose) {
 
 function closeModal(id) {
     var el = document.getElementById(id);
-    if (!el) return;
-    var modal = bootstrap.Modal.getInstance(el);
-    if (modal) {
-        modal.hide();
+        if (el) {
+            var modal = bootstrap.Modal.getInstance(el);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        setTimeout(function () {
+            document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }, 350);
     }
-}
 
-function confirmar(title, text, icon, theme) {
-    var fg = "";
-    var bg = "";
-    if (theme == "dark") {
-        fg = "#f1f3f7";
-        bg = "#333";
-    }
-    if (theme == "light") {
+    function confirmar(title, text, icon, theme) {
+        var fg = "";
+        var bg = "";
+        if (theme == "dark") {
+            fg = "#f1f3f7";
+            bg = "#333";
+        }
+        if (theme == "light") {
 
-        fg = "#333";
-        bg = "#f1f3f7";
+            fg = "#333";
+            bg = "#f1f3f7";
+        }
+        return new Promise(resolve => {
+            Swal.fire({
+                title,
+                text,
+                icon,
+                color: fg,
+                background: bg,
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si',
+                cancelButtonText: 'No'
+            }).then((result) => {
+
+                resolve(result.isConfirmed);
+
+            })
+        });
     }
-    return new Promise(resolve => {
+    function alerta(title, text, icon, theme) {
+
+        console.log(theme);
+        var fg = "";
+        var bg = "";
+        if (theme == "dark") {
+            fg = "#f1f3f7";
+            bg = "#333";
+        }
+        if (theme == "light") {
+
+            fg = "#333";
+            bg = "#f1f3f7";
+        }
         Swal.fire({
             title,
             text,
             icon,
             color: fg,
-            background: bg,
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Si',
-            cancelButtonText: 'No'
-        }).then((result) => {
-
-            resolve(result.isConfirmed);
-
+            background: bg
         })
-    });
-}
-function alerta(title, text, icon, theme) {
-
-    console.log(theme);
-    var fg = "";
-    var bg = "";
-    if (theme == "dark") {
-        fg = "#f1f3f7";
-        bg = "#333";
     }
-    if (theme == "light") {
-
-        fg = "#333";
-        bg = "#f1f3f7";
-    }
-    Swal.fire({
-        title,
-        text,
-        icon,
-        color: fg,
-        background: bg
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
     })
-}
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-})
-function StorageEvent(dotnetHelper) {
-    window.addEventListener('storage', function (event) {
-        if (event.storageArea === localStorage) {
-            // It's local storage
-            dotnetHelper.invokeMethodAsync("VerificarLogueo");
-        }
-    }, false);
-}
-//function timerInactivo(dotnetHelper) {
-//    var timer;
-//    document.onmousemove = resetTimer;
-//    document.onmousedown = resetTimer;
-//    document.onmouseenter = resetTimer;
-//    document.onkeypress = resetTimer;
-//    function resetTimer() {
-//        clearTimeout(timer);
-//        timer = setTimeout(logout, 1800000); //30 MIN
-//    }
-
-//    function logout() {
-//        dotnetHelper.invokeMethodAsync("Logout");
-//    }
-//}
-
-function playSound() {
-    var audio = new Audio('/source/sounds/cash.mp3');
-    audio.play();
-}
-window.getScrollValues = (elementId) => {
-    const element = document.getElementById(elementId);
-    console.log(element);
-    return {
-        scrollTop: element.scrollTop,
-        scrollHeight: element.scrollHeight,
-        clientHeight: element.clientHeight
-    };
-};
-
-var endScrollTimer = false;
-function ScrollToElement(id) {
-    endScrollTimer = false;
-    var contenedor = document.getElementById("ContentCalendarEvent");  // Make sure you define the ID you're looking for
-    var elements = Array.from(contenedor.children).filter(function (element) {
-        return element.id.includes(id);  // Check if the ID contains the given substring
-    });
-
-    // If you want to scroll the first matched element into view
-    if (elements.length > 0) {
-        if (elements[0]) {
-            elements[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-
-        } else {
-            setTimeout(() => scrollToElement(id), 100); // Reintentar después de un pequeño retraso
-        }
+    function StorageEvent(dotnetHelper) {
+        window.addEventListener('storage', function (event) {
+            if (event.storageArea === localStorage) {
+                // It's local storage
+                dotnetHelper.invokeMethodAsync("VerificarLogueo");
+            }
+        }, false);
     }
-    /*    setTimeout(() => endScrollTimer = true, 1000); */
+    //function timerInactivo(dotnetHelper) {
+    //    var timer;
+    //    document.onmousemove = resetTimer;
+    //    document.onmousedown = resetTimer;
+    //    document.onmouseenter = resetTimer;
+    //    document.onkeypress = resetTimer;
+    //    function resetTimer() {
+    //        clearTimeout(timer);
+    //        timer = setTimeout(logout, 1800000); //30 MIN
+    //    }
 
-}
+    //    function logout() {
+    //        dotnetHelper.invokeMethodAsync("Logout");
+    //    }
+    //}
 
-function AdicionarArribaCalendario(dotnetHelper) {
+    function playSound() {
+        var audio = new Audio('/source/sounds/cash.mp3');
+        audio.play();
+    }
+    window.getScrollValues = (elementId) => {
+        const element = document.getElementById(elementId);
+        console.log(element);
+        return {
+            scrollTop: element.scrollTop,
+            scrollHeight: element.scrollHeight,
+            clientHeight: element.clientHeight
+        };
+    };
 
-    var contenedor = document.getElementById("ContentCalendarEvent");
+    var endScrollTimer = false;
+    function ScrollToElement(id) {
+        endScrollTimer = false;
+        var contenedor = document.getElementById("ContentCalendarEvent");  // Make sure you define the ID you're looking for
+        var elements = Array.from(contenedor.children).filter(function (element) {
+            return element.id.includes(id);  // Check if the ID contains the given substring
+        });
 
-    // Guardamos la posición de desplazamiento y la altura original
-    var scrollPos = contenedor.scrollTop;
-    var scrollHeight = contenedor.scrollHeight;  // La altura total antes de la inserción
-
-    // Realizar la inserción de los nuevos elementos al principio de la lista
-    dotnetHelper.invokeMethodAsync("AdiccionarMesArriba");
-
-    // Ajustar la posición del scroll después de la inserción
-    setTimeout(function () {
-        // Calcular la nueva altura del contenedor
-        var newScrollHeight = contenedor.scrollHeight;
-
-        // Calcular la diferencia en la altura
-        var diff = newScrollHeight - scrollHeight;
-
-        // Ajustar el scrollTop para que la posición relativa se mantenga
-        contenedor.scrollTop = scrollPos + diff;
-    }, 0);
+        // If you want to scroll the first matched element into view
+        if (elements.length > 0) {
+            if (elements[0]) {
+                elements[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 
-}
-
-var previousScrollTop = 0;  // Para almacenar la última posición de desplazamiento
-var scrollTimer = null;     // Para detectar la detención del desplazamiento
-var scrollDelay = 20;      // Tiempo en ms para considerar que el scroll ha terminado
-
-function detectElementInView(dotnetHelper) {
-    clearTimeout(scrollTimer);
-    var items = document.querySelectorAll('.observed');  // Todos los elementos dentro del contenedor
-    var contenedor = document.getElementById("ContentCalendarEvent");
-    let closestElement = null;
-
-    // Iteramos sobre todos los elementos
-    items.forEach(item => {
-        const rect = item.getBoundingClientRect();
-        const containerRect = contenedor.getBoundingClientRect();
-
-        // Verificamos si el borde superior del elemento está en la parte visible del contenedor
-        if (rect.top + 10 >= containerRect.top && rect.top <= containerRect.top + contenedor.clientHeight) {
-            // Guardamos el primer elemento visible
-            if (!closestElement || rect.top < closestElement.getBoundingClientRect().top) {
-                closestElement = item;
+            } else {
+                setTimeout(() => scrollToElement(id), 100); // Reintentar después de un pequeño retraso
             }
         }
-    });
-    scrollTimer = setTimeout(function () {
-        if (closestElement) {
-            dotnetHelper.invokeMethodAsync("UpdateCurrentDate", closestElement.id);
-        }
-    }, scrollDelay);
+        /*    setTimeout(() => endScrollTimer = true, 1000); */
 
-}
+    }
+
+    function AdicionarArribaCalendario(dotnetHelper) {
+
+        var contenedor = document.getElementById("ContentCalendarEvent");
+
+        // Guardamos la posición de desplazamiento y la altura original
+        var scrollPos = contenedor.scrollTop;
+        var scrollHeight = contenedor.scrollHeight;  // La altura total antes de la inserción
+
+        // Realizar la inserción de los nuevos elementos al principio de la lista
+        dotnetHelper.invokeMethodAsync("AdiccionarMesArriba");
+
+        // Ajustar la posición del scroll después de la inserción
+        setTimeout(function () {
+            // Calcular la nueva altura del contenedor
+            var newScrollHeight = contenedor.scrollHeight;
+
+            // Calcular la diferencia en la altura
+            var diff = newScrollHeight - scrollHeight;
+
+            // Ajustar el scrollTop para que la posición relativa se mantenga
+            contenedor.scrollTop = scrollPos + diff;
+        }, 0);
+
+
+    }
+
+    var previousScrollTop = 0;  // Para almacenar la última posición de desplazamiento
+    var scrollTimer = null;     // Para detectar la detención del desplazamiento
+    var scrollDelay = 20;      // Tiempo en ms para considerar que el scroll ha terminado
+
+    function detectElementInView(dotnetHelper) {
+        clearTimeout(scrollTimer);
+        var items = document.querySelectorAll('.observed');  // Todos los elementos dentro del contenedor
+        var contenedor = document.getElementById("ContentCalendarEvent");
+        let closestElement = null;
+
+        // Iteramos sobre todos los elementos
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            const containerRect = contenedor.getBoundingClientRect();
+
+            // Verificamos si el borde superior del elemento está en la parte visible del contenedor
+            if (rect.top + 10 >= containerRect.top && rect.top <= containerRect.top + contenedor.clientHeight) {
+                // Guardamos el primer elemento visible
+                if (!closestElement || rect.top < closestElement.getBoundingClientRect().top) {
+                    closestElement = item;
+                }
+            }
+        });
+        scrollTimer = setTimeout(function () {
+            if (closestElement) {
+                dotnetHelper.invokeMethodAsync("UpdateCurrentDate", closestElement.id);
+            }
+        }, scrollDelay);
+
+    }

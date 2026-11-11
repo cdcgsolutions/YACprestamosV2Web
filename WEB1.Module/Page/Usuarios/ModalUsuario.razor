@@ -1,0 +1,104 @@
+@using MudBlazor
+@using WEB1.Module.DTOs
+
+<div class="p-2">
+    <div class="row g-3">
+        <div class="col-12">
+            <MudTextField T="string" 
+                          Label="Nombre de Usuario" 
+                          @bind-Value="Usuario.NombreUsuario" 
+                          Variant="Variant.Outlined" 
+                          Margin="Margin.Dense"
+                          UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "off" }, { "name", "new_user_name" } })"
+                          FullWidth="true" />
+        </div>
+
+        <div class="col-12">
+            <MudTextField T="string" 
+                          Label="Correo Electrónico" 
+                          @bind-Value="Usuario.CorreoElectronico" 
+                          Variant="Variant.Outlined" 
+                          Margin="Margin.Dense"
+                          UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "off" }, { "name", "new_user_email" } })"
+                          FullWidth="true" />
+        </div>
+
+        <div class="col-12 @(!EsEdicion ? "col-md-6" : "")">
+            <MudSelect T="string" 
+                       Label="Rol" 
+                       @bind-Value="Usuario.Rol" 
+                       Variant="Variant.Outlined" 
+                       Margin="Margin.Dense"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@("SuperAdmin")">SuperAdmin</MudSelectItem>
+                <MudSelectItem Value="@("Administrador")">Administrador</MudSelectItem>
+                <MudSelectItem Value="@("Operador")">Operador</MudSelectItem>
+            </MudSelect>
+        </div>
+
+        @if (!EsEdicion)
+        {
+            <div class="col-12 col-md-6">
+                <MudTextField T="string" 
+                              Label="Contraseña" 
+                              @bind-Value="Usuario.Contrasena" 
+                              InputType="@(_mostrarContrasena ? InputType.Text : InputType.Password)"
+                              Variant="Variant.Outlined" 
+                              Margin="Margin.Dense"
+                              UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "new-password" }, { "name", "new_user_password" } })"
+                              Adornment="Adornment.End" 
+                              AdornmentIcon="@(_mostrarContrasena ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)" 
+                              OnAdornmentClick="() => _mostrarContrasena = !_mostrarContrasena"
+                              FullWidth="true" />
+            </div>
+        }
+
+        @if (EsEdicion)
+        {
+            <div class="col-12">
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="switchEstadoModal" @bind="Usuario.EstaHabilitado">
+                    <label class="form-check-label fw-semibold text-body" for="switchEstadoModal">
+                        @(Usuario.EstaHabilitado ? "Usuario Activo" : "Usuario Deshabilitado")
+                    </label>
+                </div>
+            </div>
+        }
+
+        <div class="col-12 d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2 mt-4 pt-2 border-top border-secondary-subtle">
+            <button type="button" class="btn btn-outline-secondary px-4 w-100 w-sm-auto" @onclick="OnCancel" disabled="@Cargando">
+                Cancelar
+            </button>
+            <button type="button" class="btn btn-primary px-4 shadow-sm w-100 w-sm-auto" @onclick="HandleSubmit" disabled="@Cargando">
+                @if (Cargando)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span>Guardando...</span>
+                }
+                else
+                {
+                    <i class="fa-solid fa-circle-check me-1"></i>
+                    <span>Guardar</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public UsuarioFormModel Usuario { get; set; } = new();
+    [Parameter] public bool EsEdicion { get; set; } = false;
+    [Parameter] public bool Cargando { get; set; } = false;
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool _mostrarContrasena = false;
+
+    private async Task HandleSubmit()
+    {
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync();
+        }
+    }
+}

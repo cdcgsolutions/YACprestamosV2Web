@@ -1,0 +1,307 @@
+@page "/dashboard"
+@using MudBlazor
+@using WEB1.Module.DTOs
+@using WEB1.Module.CLIENT.RN
+@using WEB1.Module.Client.Services
+@inject DataMasterApi Api
+@inject FloatingMessage msj
+@inject LayoutService LayoutService
+@inject IJSRuntime JS
+
+<PageTitle>Dashboard | YAC-Préstamos</PageTitle>
+
+@if (_cargando)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Cargando métricas...</span>
+            </div>
+            <h6 class="mt-3 text-body fw-bold text-uppercase" style="letter-spacing: 1px;">Cargando Dashboard...</h6>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid mt-3">
+        <!-- Cabecera con Botón de Retroceso y Acción de Reporte Excel estilo SIS.INV.WEB -->
+        <div class="card shadow-sm border-0 bg-body mb-3">
+            <div class="d-flex align-items-center justify-content-center pt-2 px-3 position-relative">
+                <div class="position-absolute start-0 ps-3">
+                    <a href="/" class="btn btn-link text-body p-0" title="Volver al Inicio">
+                        <i class="fa-solid fa-circle-arrow-left fs-5"></i>
+                    </a>
+                </div>
+                <span class="text-uppercase fw-bold text-body" style="letter-spacing: 1px;">
+                    Dashboard Financiero
+                </span>
+            </div>
+            <div class="card-body p-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-body fw-semibold small">Resumen consolidado de operaciones y cartera crediticia</div>
+                    </div>
+                    <div class="w-100 w-sm-auto">
+                        <button type="button" 
+                                class="btn btn-sm btn-success text-white shadow-sm px-3 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold w-100 w-sm-auto"
+                                @onclick="GenerarReporteExcel"
+                                disabled="@_isExporting">
+                            @if (_isExporting)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span>Generando Excel...</span>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-file-excel fs-6"></i>
+                                <span>Descargar Reporte Excel</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (_resumen != null)
+        {
+            <!-- 4 Tarjetas KPI con tokens dinámicos -->
+            <div class="row g-3 mb-3">
+                <!-- KPI 1: Capital Prestado -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-3 h-100 border-start border-4 border-primary">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-body-secondary small fw-semibold text-uppercase">Capital Colocado</span>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                        <div class="h4 fw-bold text-body mb-1">Bs. @_resumen.TotalCapitalPrestado.ToString("N2")</div>
+                        <div class="small text-body-secondary">
+                            <span class="text-primary fw-semibold">+Bs. @_resumen.TotalInteresGenerado.ToString("N2")</span> en intereses
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Total Recaudado -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-3 h-100 border-start border-4 border-success">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-body-secondary small fw-semibold text-uppercase">Total Recaudado</span>
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+                        <div class="h4 fw-bold text-success mb-1">Bs. @_resumen.TotalRecaudado.ToString("N2")</div>
+                        <div class="small text-body-secondary">
+                            <span>@_resumen.PrestamosPagados préstamos liquidados</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Saldo por Cobrar -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-3 h-100 border-start border-4 border-danger">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-body-secondary small fw-semibold text-uppercase">Saldo por Cobrar</span>
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="h4 fw-bold text-danger mb-1">Bs. @_resumen.SaldoPendienteTotal.ToString("N2")</div>
+                        <div class="small text-body-secondary">
+                            <span>@_resumen.PrestamosActivos préstamos vigentes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Clientes -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-3 h-100 border-start border-4 border-info">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-body-secondary small fw-semibold text-uppercase">Clientes Registrados</span>
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="h4 fw-bold text-body mb-1">@_resumen.TotalClientes</div>
+                        <div class="small text-body-secondary">
+                            <span class="text-success fw-semibold">@_resumen.ClientesActivos</span> clientes activos
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos MudBlazor Interactivos -->
+            <div class="row g-3 mb-3">
+                <!-- Gráfico 1: Cartera Recuperada vs Saldo Pendiente (Donut Chart) -->
+                <div class="col-12 col-lg-5">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-4 h-100">
+                        <h6 class="fw-bold text-body mb-3 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-primary"></i>
+                            Estado de la Cartera Total
+                        </h6>
+                        @if (_donutData.Sum() > 0)
+                        {
+                            <div class="d-flex justify-content-center align-items-center py-2">
+                                <MudChart ChartType="ChartType.Donut" 
+                                          InputData="@_donutData" 
+                                          InputLabels="@_donutLabels" 
+                                          Width="260px" 
+                                          Height="260px" />
+                            </div>
+                            <div class="mt-auto pt-3 border-top border-secondary-subtle">
+                                <div class="d-flex justify-content-between small text-body-secondary mb-1">
+                                    <span><i class="fa-solid fa-circle text-success me-1"></i>Recaudado:</span>
+                                    <span class="fw-bold text-body">Bs. @_resumen.TotalRecaudado.ToString("N2")</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-body-secondary">
+                                    <span><i class="fa-solid fa-circle text-danger me-1"></i>Pendiente:</span>
+                                    <span class="fw-bold text-body">Bs. @_resumen.SaldoPendienteTotal.ToString("N2")</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5 text-body-secondary">
+                                <i class="fa-solid fa-chart-pie fs-2 opacity-50 mb-2"></i>
+                                <div>No hay montos registrados para graficar.</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Gráfico 2: Préstamos por Modalidad de Cobro (Bar Chart) -->
+                <div class="col-12 col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-4 bg-body p-4 h-100">
+                        <h6 class="fw-bold text-body mb-3 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-primary"></i>
+                            Colocación por Modalidad de Cobro
+                        </h6>
+                        @if (_barSeries != null && _barSeries.Any() && _barXLabels.Any())
+                        {
+                            <div class="py-2">
+                                <MudChart ChartType="ChartType.Bar" 
+                                          ChartSeries="@_barSeries" 
+                                          XAxisLabels="@_barXLabels" 
+                                          Width="100%" 
+                                          Height="260px" />
+                            </div>
+                            <div class="mt-auto pt-3 border-top border-secondary-subtle">
+                                <div class="row text-center g-2">
+                                    @foreach (var m in _resumen.DistribucionModalidades)
+                                    {
+                                        <div class="col">
+                                            <small class="text-body-secondary d-block">@m.Modalidad</small>
+                                            <span class="fw-bold text-body">@m.Cantidad ops.</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5 text-body-secondary">
+                                <i class="fa-solid fa-chart-column fs-2 opacity-50 mb-2"></i>
+                                <div>No hay préstamos registrados para graficar.</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private DashboardResumenDTO? _resumen;
+    private bool _cargando = true;
+    private bool _isExporting = false;
+
+    // Gráfico Donut
+    private double[] _donutData = Array.Empty<double>();
+    private string[] _donutLabels = new[] { "Cobrado (Bs)", "Pendiente (Bs)" };
+
+    // Gráfico Barra
+    private List<ChartSeries> _barSeries = new();
+    private string[] _barXLabels = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.SetTitle("Dashboard");
+        await CargarDashboard();
+    }
+
+    private async Task CargarDashboard()
+    {
+        _cargando = true;
+        try
+        {
+            var res = await Api.GetDashboardResumenAsync();
+            if (res.IsSuccess && res.Value != null)
+            {
+                _resumen = res.Value;
+
+                // Preparar Donut
+                _donutData = new double[] 
+                { 
+                    (double)_resumen.TotalRecaudado, 
+                    (double)_resumen.SaldoPendienteTotal 
+                };
+
+                // Preparar Barra
+                if (_resumen.DistribucionModalidades.Any())
+                {
+                    _barXLabels = _resumen.DistribucionModalidades.Select(m => m.Modalidad).ToArray();
+                    var valores = _resumen.DistribucionModalidades.Select(m => (double)m.MontoTotal).ToArray();
+                    _barSeries = new List<ChartSeries>
+                    {
+                        new ChartSeries { Name = "Monto Total (Bs)", Data = valores }
+                    };
+                }
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cargar datos del dashboard.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await msj.ShowErrorMessage("Error al cargar dashboard: " + ex.Message);
+        }
+        finally
+        {
+            _cargando = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task GenerarReporteExcel()
+    {
+        try
+        {
+            _isExporting = true;
+            var res = await Api.GenerarReporteExcelAsync("Reporte General de Cartera de Préstamos");
+            if (res.IsSuccess && res.Value != null)
+            {
+                var base64 = Convert.ToBase64String(res.Value);
+                var fileName = $"Reporte_Cartera_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+                await JS.InvokeVoidAsync("descargarArchivoBase64", fileName, base64);
+                await msj.ShowSuccessMessage("Reporte Excel descargado exitosamente.");
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al generar reporte Excel.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await msj.ShowErrorMessage($"Error al exportar: {ex.Message}");
+        }
+        finally
+        {
+            _isExporting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
+

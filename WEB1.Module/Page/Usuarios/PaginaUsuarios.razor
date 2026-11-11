@@ -1,0 +1,383 @@
+@page "/usuarios"
+@using MudBlazor
+@using WEB1.Module.DTOs
+@using WEB1.Module.CLIENT.RN
+@using WEB1.Module.Client.Services
+@inject DataMasterApi Api
+@inject FloatingMessage msj
+@inject LayoutService LayoutService
+
+<PageTitle>Usuarios | YAC-Préstamos</PageTitle>
+
+@if (_cargando)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <h6 class="mt-3 text-body fw-bold text-uppercase" style="letter-spacing: 1px;">Cargando Usuarios...</h6>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid mt-3">
+        <!-- Cabecera con Botón de Retroceso al Home estilo SIS.INV.WEB -->
+        <div class="card shadow-sm border-0 bg-body mb-2">
+            <div class="d-flex align-items-center justify-content-center pt-2 px-3 position-relative">
+                <div class="position-absolute start-0 ps-3">
+                    <a href="/" class="btn btn-link text-body p-0" title="Volver al Inicio">
+                        <i class="fa-solid fa-circle-arrow-left fs-5"></i>
+                    </a>
+                </div>
+                <span class="text-uppercase fw-bold text-body" style="letter-spacing: 1px;">
+                    Gestión de Usuarios
+                </span>
+            </div>
+            <div class="card-body p-2 px-3">
+                <div class="row g-2 align-items-center justify-content-between">
+                    <div class="col-12 col-md-5">
+                        <MudTextField T="string"
+                                      Value="_busqueda"
+                                      ValueChanged="OnSearchChanged"
+                                      Placeholder="Buscar por nombre, correo o rol..."
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      Clearable="true"
+                                      UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "off" }, { "name", "filtro_busqueda_usuarios" } })"
+                                      Class="bg-body text-body"
+                                      Style="font-size: 0.85rem;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      AdornmentColor="Color.Primary" />
+                    </div>
+
+                    <div class="col-12 col-md-auto d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3 py-2 d-flex align-items-center gap-1 w-100 justify-content-center justify-content-md-start"
+                                @onclick="AbrirModalCrear">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span class="fw-bold">Nuevo Usuario</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor Responsivo estilo SIS.INV.WEB (Tabla en Escritorio / Tarjetas en Móvil) -->
+        <div class="card shadow-sm border-0 bg-body mb-3">
+            <!-- Vista Escritorio: Tabla -->
+            <div class="card-body p-0 d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="bg-body-secondary text-body fw-semibold">
+                            <tr>
+                                <th class="ps-3 py-3" style="width: 80px;">ID</th>
+                                <th>Nombre de Usuario</th>
+                                <th>Correo Electrónico</th>
+                                <th>Rol</th>
+                                <th class="text-center" style="width: 120px;">Estado</th>
+                                <th class="text-center pe-3" style="width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (UsuariosPaginados.Any())
+                            {
+                                @foreach (var usuario in UsuariosPaginados)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <span class="fw-bold text-primary font-monospace">#@usuario.IdUsuario</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-body">@usuario.NombreUsuario</div>
+                                        </td>
+                                        <td>
+                                            <span class="text-body-secondary"><i class="fa-solid fa-envelope me-1 text-primary"></i>@usuario.CorreoElectronico</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2 py-1">
+                                                @usuario.Rol
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" 
+                                                    class="btn btn-sm @(usuario.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2"
+                                                    style="font-size: 0.72rem;"
+                                                    @onclick="() => CambiarEstado(usuario)">
+                                                @(usuario.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                            </button>
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-outline-primary btn-sm border-0" title="Editar Usuario"
+                                                        @onclick="() => AbrirModalEditar(usuario)">
+                                                    <i class="fa-solid fa-pen-to-square fs-6"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-body-secondary">
+                                        <i class="fa-solid fa-user-slash fs-1 d-block opacity-50 mb-2"></i>
+                                        <span>No se encontraron usuarios registrados.</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vista Móvil: Tarjetas individuales estilo SIS.INV.WEB -->
+            <div class="card-body p-2 d-block d-md-none bg-body-tertiary">
+                @if (UsuariosPaginados.Any())
+                {
+                    @foreach (var usuario in UsuariosPaginados)
+                    {
+                        <div class="card mb-2 border-0 shadow-sm bg-body rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary-subtle">
+                                    <span class="fw-bold text-primary font-monospace" style="font-size: 0.85rem;">#@usuario.IdUsuario</span>
+                                    <button type="button" 
+                                            class="btn btn-sm @(usuario.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2" 
+                                            style="font-size: 0.68rem;" 
+                                            @onclick="() => CambiarEstado(usuario)">
+                                        @(usuario.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                    </button>
+                                </div>
+                                <div class="fw-bold text-body fs-6 mb-1">@usuario.NombreUsuario</div>
+                                <div class="text-body-secondary small mb-2"><i class="fa-solid fa-envelope me-1 text-primary"></i>@usuario.CorreoElectronico</div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary-subtle">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2 py-1">
+                                        @usuario.Rol
+                                    </span>
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 py-1" @onclick="() => AbrirModalEditar(usuario)">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-body-secondary">
+                        <i class="fa-solid fa-user-slash fs-2 d-block opacity-50 mb-2"></i>
+                        <span class="small">No se encontraron usuarios registrados.</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Paginación MudPagination con pie dinámico -->
+            @if (TotalPaginas > 0)
+            {
+                <div class="card-footer bg-body border-0 py-3 d-flex justify-content-center">
+                    <MudPagination Selected="_paginaActual"
+                                   SelectedChanged="OnPageChanged"
+                                   Count="TotalPaginas"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled" />
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal Componente sobre Componente estilo SIS.INV.WEB -->
+<AppModal @ref="ModalUsuarioRef" 
+          Id="modalUsuario" 
+          Title="@(_esEdicion ? $"Editar Usuario #{_usuarioModel.IdUsuario}" : "Registro de Nuevo Usuario")" 
+          TitleIcon="fa-solid fa-id-badge"
+          HeaderVisible="true" 
+          FooterVisible="false"
+          Centered="true">
+    <ModalUsuario Usuario="_usuarioModel"
+                  EsEdicion="_esEdicion"
+                  Cargando="_guardando"
+                  OnSubmit="GuardarUsuario"
+                  OnCancel="() => ModalUsuarioRef.CloseModal()" />
+</AppModal>
+
+@code {
+    private List<UsuarioDTO> _usuarios = new();
+    private bool _cargando = true;
+    private string _busqueda = "";
+    private int _paginaActual = 1;
+    private const int _tamanoPagina = 10;
+
+    private AppModal ModalUsuarioRef = default!;
+    private bool _esEdicion = false;
+    private UsuarioFormModel _usuarioModel = new();
+    private bool _guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.SetTitle("Gestión de Usuarios");
+        await CargarUsuarios(esCargaInicial: true);
+    }
+
+    private async Task CargarUsuarios(bool esCargaInicial = false)
+    {
+        if (esCargaInicial)
+        {
+            _cargando = true;
+        }
+
+        try
+        {
+            var res = await Api.GetUsuariosAsync();
+            if (res.IsSuccess && res.Value != null)
+            {
+                _usuarios = res.Value;
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cargar usuarios");
+            }
+        }
+        catch (Exception ex)
+        {
+            await msj.ShowErrorMessage("Error al cargar usuarios: " + ex.Message);
+        }
+        finally
+        {
+            _cargando = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private IEnumerable<UsuarioDTO> UsuariosFiltrados => _usuarios.Where(u =>
+        string.IsNullOrWhiteSpace(_busqueda) ||
+        (!string.IsNullOrEmpty(u.NombreUsuario) && u.NombreUsuario.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)) ||
+        (!string.IsNullOrEmpty(u.CorreoElectronico) && u.CorreoElectronico.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)) ||
+        (!string.IsNullOrEmpty(u.Rol) && u.Rol.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)));
+
+    private IEnumerable<UsuarioDTO> UsuariosPaginados =>
+        UsuariosFiltrados.Skip((_paginaActual - 1) * _tamanoPagina).Take(_tamanoPagina);
+
+    private int TotalPaginas => (int)Math.Ceiling((double)UsuariosFiltrados.Count() / _tamanoPagina);
+
+    private void OnSearchChanged(string text)
+    {
+        _busqueda = text;
+        _paginaActual = 1;
+    }
+
+    private void OnPageChanged(int page)
+    {
+        _paginaActual = page;
+    }
+
+    private async Task AbrirModalCrear()
+    {
+        _esEdicion = false;
+        _usuarioModel = new UsuarioFormModel
+        {
+            Rol = "Operador",
+            EstaHabilitado = true
+        };
+        await ModalUsuarioRef.OpenModal();
+    }
+
+    private async Task AbrirModalEditar(UsuarioDTO u)
+    {
+        _esEdicion = true;
+        _usuarioModel = new UsuarioFormModel
+        {
+            IdUsuario = u.IdUsuario,
+            NombreUsuario = u.NombreUsuario,
+            CorreoElectronico = u.CorreoElectronico,
+            Rol = u.Rol,
+            EstaHabilitado = u.EstaHabilitado,
+            Contrasena = ""
+        };
+        await ModalUsuarioRef.OpenModal();
+    }
+
+    private async Task GuardarUsuario()
+    {
+        if (string.IsNullOrWhiteSpace(_usuarioModel.NombreUsuario) || string.IsNullOrWhiteSpace(_usuarioModel.CorreoElectronico))
+        {
+            await msj.ShowWarningMessage("Por favor completa los campos requeridos.");
+            return;
+        }
+
+        _guardando = true;
+        if (_esEdicion)
+        {
+            var editDto = new UsuarioEdicionDTO
+            {
+                IdUsuario = _usuarioModel.IdUsuario,
+                NombreUsuario = _usuarioModel.NombreUsuario,
+                CorreoElectronico = _usuarioModel.CorreoElectronico,
+                Rol = _usuarioModel.Rol,
+                EstaHabilitado = _usuarioModel.EstaHabilitado,
+                NuevaContrasena = null
+            };
+
+            var res = await Api.ActualizarUsuarioAsync(_usuarioModel.IdUsuario, editDto);
+            if (res.IsSuccess)
+            {
+                await ModalUsuarioRef.CloseModal();
+                await msj.ShowSuccessMessage("Usuario actualizado exitosamente.");
+                await CargarUsuarios(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al actualizar usuario.");
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(_usuarioModel.Contrasena))
+            {
+                await msj.ShowWarningMessage("La contraseña es obligatoria.");
+                _guardando = false;
+                return;
+            }
+
+            var createDto = new UsuarioCreacionDTO
+            {
+                NombreUsuario = _usuarioModel.NombreUsuario,
+                CorreoElectronico = _usuarioModel.CorreoElectronico,
+                Rol = _usuarioModel.Rol,
+                Contrasena = _usuarioModel.Contrasena
+            };
+
+            var res = await Api.CrearUsuarioAsync(createDto);
+            if (res.IsSuccess)
+            {
+                await ModalUsuarioRef.CloseModal();
+                await msj.ShowSuccessMessage("Usuario registrado exitosamente.");
+                await CargarUsuarios(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al registrar usuario.");
+            }
+        }
+        _guardando = false;
+    }
+
+    private async Task CambiarEstado(UsuarioDTO u)
+    {
+        var res = await Api.CambiarEstadoUsuarioAsync(u.IdUsuario);
+        if (res.IsSuccess)
+        {
+            u.EstaHabilitado = !u.EstaHabilitado;
+            await msj.ShowInfoMessage($"Usuario {(u.EstaHabilitado ? "habilitado" : "deshabilitado")}");
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cambiar estado de usuario");
+        }
+    }
+}

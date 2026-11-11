@@ -1,6 +1,5 @@
 @page "/"
 @using Microsoft.AspNetCore.Authorization
-@using MudBlazor
 @using WEB1.SandBox.DTOs
 @using WEB1.SandBox.Services
 @using WEB1.Module.Client.Services
@@ -10,149 +9,131 @@
 @inject ModuleService ModuleService
 @inject IConfiguration Configuration
 
-<PageTitle>Inicio</PageTitle>
+<PageTitle>Inicio | @(Configuration["app:Name"] ?? "YAC. PRESTAMOS")</PageTitle>
 
-<div class="container-fluid px-4 py-3">
-    <!-- Header con Saludo -->
-    <div class="mb-4">
-        <h1 class="fw-bold mb-1 text-body">¿Qué vamos a gestionar hoy?</h1>
-        <p class="text-secondary mb-0 small">Selecciona un módulo para acceder a tus herramientas.</p>
-    </div>
-
-    <!-- Grid de Módulos (Aspecto Shell) -->
-    @if (_isLoading)
+<div class="container-fluid p-4 d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
+    @if (Modules != null && Modules.Any())
     {
-        <div class="text-center py-5">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <p class="mt-3 text-muted">Cargando módulos disponibles...</p>
-        </div>
-    }
-    else if (_modules != null && _modules.Any())
-    {
-        <div class="row g-4">
-            @for (int i = 0; i < _modules.Count; i++)
+        <div class="row g-4 justify-content-center w-100">
+            @foreach (var module in Modules.OrderBy(x => x.name))
             {
-                var module = _modules[i];
-                var colorClass = GetBootstrapColorClass(i);
-
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                    <div class="shell-module-card h-100 p-4 rounded-4 bg-body border shadow-xs cursor-pointer d-flex flex-column" 
-                         @onclick="@(() => NavigateToModule(module.path))">
-                        
-                        <!-- Icono en Badge con Color Dinámico de Bootstrap -->
-                        <div class="module-icon-badge mb-4 d-flex align-items-center justify-content-center @colorClass">
-                            <i class="@module.icon fs-3"></i>
-                        </div>
-
-                        <!-- Título del Módulo -->
-                        <h5 class="fw-bold mb-1 text-body text-truncate" title="@module.name">
-                            @module.name
-                        </h5>
-
-                        <!-- Subtítulo de interfaces -->
-                        <p class="text-secondary small mb-4">
-                            @(module.interfaceList.Count == 1 ? "1 interfaz disponible" : $"{module.interfaceList.Count} interfaces disponibles")
-                        </p>
-
-                        <!-- Barra Inferior: Pill Badge y Flecha -->
-                        <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
-                            <span class="shell-pill-badge">
-                                @(module.interfaceList.Count == 1 ? "1 interfaz" : $"{module.interfaceList.Count} interfaces")
-                            </span>
-                            <i class="bi bi-arrow-right fs-5 text-secondary card-arrow"></i>
+                if (module.interfaceList != null && module.interfaceList.Any())
+                {
+                    <div class="col-12 col-md-6 col-lg-5 col-xl-4">
+                        <div class="card h-100 border-0 shadow-sm hover-elevate rounded-4 overflow-hidden module-card bg-body">
+                            <div class="card-header bg-transparent border-0 pt-4 pb-0 text-center">
+                                <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 64px; height: 64px; border-radius: 50%;">
+                                    <i class="@module.icon fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold mb-0 text-body">@module.name</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0 mt-2">
+                                    @foreach (var iface in module.interfaceList.Take(4))
+                                    {
+                                        <li class="mb-2">
+                                            <a href="@iface.path" class="text-decoration-none text-body d-flex align-items-center p-2 rounded hover-bg-light transition-all">
+                                                <i class="@iface.icon me-2 text-primary" style="width: 22px; text-align: center;"></i>
+                                                <span class="text-truncate fw-semibold">@iface.name</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (module.interfaceList.Count > 4)
+                                    {
+                                        <li class="text-center mt-2">
+                                            <span class="badge bg-body-tertiary text-body-secondary rounded-pill border">+@(module.interfaceList.Count - 4) más</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pb-4 pt-0 text-center">
+                                <button class="btn btn-outline-primary rounded-pill px-4 btn-sm fw-bold" @onclick="() => OpenModule(module)">
+                                    Ver Todo
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             }
         </div>
     }
     else
     {
-        <div class="text-center py-5 bg-body border rounded-4">
-            <i class="bi bi-folder-x fs-1 text-muted d-block mb-2"></i>
-            <h5 class="fw-bold text-body">No hay módulos disponibles</h5>
-            <p class="text-secondary small mb-0">No se encontraron módulos configurados o autorizados para tu rol.</p>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando módulos...</span>
+            </div>
+            <p class="mt-3 text-body-secondary">Cargando accesos...</p>
         </div>
     }
 </div>
 
+<!-- Modal Bootstrap AppModal con FontAwesome -->
+<AppModal @ref="Minterfaces" Title="@(selectedModule?.name)" TitleIcon="@selectedModule?.icon" HeaderVisible="true" Centered="true" Id="moduleModal">
+    <div class="p-2">
+        <div class="position-relative mb-4">
+            <i class="fa-solid fa-magnifying-glass position-absolute text-body-secondary" style="top: 14px; left: 16px;"></i>
+            <input class="form-control form-control-lg rounded-pill border ps-5 pe-4" 
+                   placeholder="Filtrar opciones..." 
+                   @bind-value="@texti" 
+                   @bind-value:event="oninput" />
+        </div>
+        <div class="row g-3">
+            @if (selectedModule?.interfaceList != null)
+            {
+                @foreach (var item in selectedModule.interfaceList.Where(i => string.IsNullOrWhiteSpace(texti) || i.name.Contains(texti, StringComparison.OrdinalIgnoreCase)))
+                {
+                    <div class="col-md-6">
+                        <div @onclick="() => irPagina(item)" 
+                             class="d-flex align-items-center p-3 rounded border hover-shadow cursor-pointer h-100 transition-all bg-body">
+                            <div class="me-3 text-primary bg-primary bg-opacity-10 p-2 rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="@item.icon fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-body">@item.name</h6>
+                                <small class="text-body-secondary">Ir a la página</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</AppModal>
+
 <style>
-    .shell-module-card {
-        border-radius: 20px !important;
-        border: 1px solid rgba(0, 0, 0, 0.07) !important;
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-        cursor: pointer;
-    }
-
-    .shell-module-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.07) !important;
-        border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
-    }
-
-    .shell-module-card:hover .card-arrow {
-        color: var(--bs-primary) !important;
-        transform: translateX(4px);
-    }
-
-    .module-icon-badge {
-        width: 60px;
-        height: 60px;
-        border-radius: 18px;
-        flex-shrink: 0;
-    }
-
-    .shell-pill-badge {
-        background-color: var(--bs-tertiary-bg);
-        color: var(--bs-secondary-color);
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.78rem;
-        font-weight: 500;
-    }
-
-    .card-arrow {
-        transition: transform 0.2s ease, color 0.2s ease;
-    }
-
-    .shadow-xs {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
+    .hover-elevate { transition: transform 0.2s, box-shadow 0.2s; }
+    .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+    .hover-bg-light:hover { background-color: rgba(var(--bs-primary-rgb), 0.08); color: var(--bs-primary) !important; }
+    .hover-bg-light:hover i { color: var(--bs-primary) !important; }
+    .transition-all { transition: all 0.2s ease; }
+    .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: var(--bs-primary) !important; }
+    .cursor-pointer { cursor: pointer; }
 </style>
 
 @code {
-    private List<ModuleDTO> _modules = new();
-    private bool _isLoading = true;
-
-    private readonly string[] _bootstrapColorClasses = new[]
-    {
-        "bg-primary-subtle text-primary",
-        "bg-success-subtle text-success",
-        "bg-danger-subtle text-danger",
-        "bg-warning-subtle text-warning",
-        "bg-info-subtle text-info",
-        "bg-secondary-subtle text-secondary"
-    };
+    private List<ModuleDTO> Modules = new();
+    private ModuleDTO? selectedModule;
+    private string texti = string.Empty;
+    private AppModal Minterfaces = default!;
 
     protected override async Task OnInitializedAsync()
     {
         LayoutService.SetTitle("Inicio");
-        _isLoading = true;
-        var modules = await ModuleService.GetModulesAsync();
-        _modules = modules.Where(m => m.status).ToList();
-        _isLoading = false;
+        Modules = await ModuleService.GetModulesAsync();
     }
 
-    private string GetBootstrapColorClass(int index)
+    private async Task OpenModule(ModuleDTO module)
     {
-        return _bootstrapColorClasses[index % _bootstrapColorClasses.Length];
+        selectedModule = module;
+        texti = "";
+        await Minterfaces.OpenModal();
     }
 
-    private void NavigateToModule(string path)
+    private async Task irPagina(InterfaceDTO item)
     {
-        if (!string.IsNullOrWhiteSpace(path))
-        {
-            NavigationManager.NavigateTo($"/module/{path.Trim('/')}");
-        }
+        await Minterfaces.CloseModal();
+        NavigationManager.NavigateTo(item.path);
     }
 }

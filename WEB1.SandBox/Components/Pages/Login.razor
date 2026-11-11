@@ -9,82 +9,162 @@
 @inject NavigationManager NavigationManager
 @inject FloatingMessage FloatingMessage
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Iniciar Sesión | YAC-Préstamos</PageTitle>
 
-<div class="login-container">
-    <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center min-vh-100 py-6">
-        <MudCard Elevation="8" Class="pa-6 rounded-xl w-100" Style="max-width: 440px; backdrop-filter: blur(10px);">
-            <div class="text-center mb-6">
-                <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mb-3 mx-auto" Style="width: 64px; height: 64px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />
-                </MudAvatar>
-                <MudText Typo="Typo.h5" Class="fw-bold">Bienvenido</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Inicia sesión con tu cuenta</MudText>
+<div class="login-wrapper d-flex align-items-center justify-content-center min-vh-100 p-3 p-md-4">
+    <!-- Card Principal Split Elegante estilo SIS.INV -->
+    <div class="card login-card border-0 shadow-lg overflow-hidden" style="max-width: 880px; width: 100%; border-radius: 1.25rem;">
+        <div class="row g-0">
+            <!-- Columna Izquierda: Banner Visual con loginOffice.png (Visible en Desktop) -->
+            <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-4 p-xl-5 text-white position-relative login-brand-side">
+                <div class="position-relative z-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="brand-icon-box shadow-sm">
+                            <i class="fa-solid fa-hand-holding-dollar fs-3 text-primary"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold tracking-wide text-white">YAC. PRÉSTAMOS</div>
+                            <small class="text-white-50">Portal Administrativo</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="position-relative z-2 pt-4 border-top border-light border-opacity-10 text-white-50 small d-flex justify-content-between">
+                    <span>© @DateTime.Now.Year YAC-Préstamos</span>
+                    <span class="text-primary fw-semibold">v2.0</span>
+                </div>
             </div>
 
-            @if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4 rounded-lg" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
-                    @_errorMessage
-                </MudAlert>
-            }
-
-            <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator />
-
-                <div class="mb-3">
-                    <MudTextField @bind-Value="_loginModel.UserName"
-                                  Label="Usuario o Correo"
-                                  Variant="Variant.Outlined"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Person"
-                                  For="@(() => _loginModel.UserName)"
-                                  Disabled="@_isProcessing"
-                                  FullWidth="true" />
+            <!-- Columna Derecha: Formulario de Autenticación con MudBlazor -->
+            <div class="col-12 col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-body">
+                <div class="text-center mb-4">
+                    <div class="brand-icon-box mx-auto mb-3 shadow d-lg-none">
+                        <i class="fa-solid fa-hand-holding-dollar fs-2 text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold text-body mb-1">Bienvenido</h4>
+                    <p class="text-body-secondary small mb-0">Ingresa tus credenciales para acceder al sistema</p>
                 </div>
 
-                <div class="mb-4">
-                    <MudTextField @bind-Value="_loginModel.Password"
-                                  Label="Contraseña"
-                                  Variant="Variant.Outlined"
-                                  InputType="@_passwordInputType"
-                                  Adornment="Adornment.End"
-                                  AdornmentIcon="@_passwordIcon"
-                                  OnAdornmentClick="TogglePasswordVisibility"
-                                  For="@(() => _loginModel.Password)"
-                                  Disabled="@_isProcessing"
-                                  FullWidth="true" />
-                </div>
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger py-2 px-3 small d-flex align-items-center gap-2 mb-3 rounded-3" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation fs-6"></i>
+                        <span>@_errorMessage</span>
+                    </div>
+                }
 
-                <MudButton ButtonType="ButtonType.Submit"
-                           Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Large"
-                           FullWidth="true"
-                           Class="py-3 rounded-lg fw-bold"
-                           Disabled="@_isProcessing">
-                    @if (_isProcessing)
-                    {
-                        <MudProgressCircular Class="ms-n1 me-2" Size="Size.Small" Indeterminate="true" />
-                        <span>Autenticando...</span>
-                    }
-                    else
-                    {
-                        <span>Iniciar Sesión</span>
-                    }
-                </MudButton>
-            </EditForm>
-        </MudCard>
-    </MudContainer>
+                <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <MudTextField @bind-Value="_loginModel.UserName"
+                                      Label="Usuario o Correo"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.PersonOutline"
+                                      AdornmentColor="Color.Primary"
+                                      Class="custom-login-field"
+                                      For="@(() => _loginModel.UserName)"
+                                      Disabled="@_isProcessing"
+                                      FullWidth="true" />
+                    </div>
+
+                    <div class="mb-4">
+                        <MudTextField @bind-Value="_loginModel.Password"
+                                      Label="Contraseña"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="@_passwordInputType"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@_passwordIcon"
+                                      AdornmentColor="Color.Primary"
+                                      Class="custom-login-field"
+                                      OnAdornmentClick="TogglePasswordVisibility"
+                                      For="@(() => _loginModel.Password)"
+                                      Disabled="@_isProcessing"
+                                      FullWidth="true" />
+                    </div>
+
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               FullWidth="true"
+                               Class="py-3 rounded-3 fw-bold text-white shadow-sm d-flex align-items-center justify-content-center gap-2"
+                               Disabled="@_isProcessing">
+                        @if (_isProcessing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Autenticando...</span>
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>
+                            <span>Iniciar Sesión</span>
+                        }
+                    </MudButton>
+                </EditForm>
+
+                <!-- Pie de página con créditos CDCGsolutions -->
+                <div class="text-center mt-4 pt-3 border-top border-secondary-subtle">
+                    <div class="text-body-secondary small" style="font-size: 0.78rem;">
+                        &copy; @DateTime.Now.Year YAC-Préstamos &bull; Desarrollado por <strong>CDCGsolutions</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-    .login-container {
+    .login-wrapper {
+        background: radial-gradient(circle at 10% 20%, #1e293b 0%, #0b1120 90%);
         min-height: 100vh;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .login-card {
+        background-color: var(--bs-body-bg, #1e2530);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .login-brand-side {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.82)), url('/brand/loginOffice.png') center/cover no-repeat;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        min-height: 480px;
+    }
+
+    .brand-icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        background: rgba(13, 110, 253, 0.12);
+        border: 1px solid rgba(13, 110, 253, 0.35);
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 0 20px rgba(13, 110, 253, 0.2);
+    }
+
+    .tracking-wide {
+        letter-spacing: 1.5px;
+    }
+
+    /* Solución definitiva para campos autocompletados por Chrome / Edge */
+    .custom-login-field input:-webkit-autofill,
+    .custom-login-field input:-webkit-autofill:hover, 
+    .custom-login-field input:-webkit-autofill:focus, 
+    .custom-login-field input:-webkit-autofill:active {
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-fill-color: var(--mud-palette-text-primary, inherit) !important;
+        caret-color: var(--mud-palette-text-primary, inherit) !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+        box-shadow: none !important;
+    }
+
+    .custom-login-field .mud-input-outlined-border {
+        border-color: rgba(var(--bs-body-color-rgb, 120, 120, 120), 0.3) !important;
     }
 </style>
 

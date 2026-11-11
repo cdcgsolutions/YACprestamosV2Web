@@ -26,7 +26,7 @@ namespace WEB1.SandBox.Services
                     return appPlantilla;
                 if (bool.TryParse(_configuration["Plantilla"], out var rootPlantilla))
                     return rootPlantilla;
-                return true; // Por defecto true si no está especificado
+                return true;
             }
         }
 
@@ -99,44 +99,31 @@ namespace WEB1.SandBox.Services
                         loaded = await response.Content.ReadFromJsonAsync<List<ModuleDTO>>();
                     }
 
-                    Modules = loaded ?? new List<ModuleDTO>();
-                    _hasLoadedFromApi = true;
-                    OnModulesChanged?.Invoke();
-                    return Modules;
-                }
-                else
-                {
-                    _logger?.LogWarning("No se pudieron obtener los módulos desde la API. Status Code: {StatusCode}", response.StatusCode);
-                    Modules = new List<ModuleDTO>();
-                    _hasLoadedFromApi = true;
-                    OnModulesChanged?.Invoke();
-                    return Modules;
+                    if (loaded != null && loaded.Any())
+                    {
+                        Modules = loaded;
+                        _hasLoadedFromApi = true;
+                        OnModulesChanged?.Invoke();
+                        return Modules;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error al consultar los módulos desde la API.");
-                Modules = new List<ModuleDTO>();
-                _hasLoadedFromApi = true;
-                OnModulesChanged?.Invoke();
-                return Modules;
+                _logger?.LogWarning(ex, "Error al cargar módulos desde la API. Usando módulos locales.");
             }
+
+            LoadMockModules();
+            return Modules;
         }
 
         public async Task<ModuleDTO?> GetModuleByPathAsync(string path)
         {
-            if (string.IsNullOrWhiteSpace(path)) return null;
-
             if (Modules.Count == 0)
             {
                 await GetModulesAsync();
             }
 
-            return GetModuleByPath(path);
-        }
-
-        public ModuleDTO? GetModuleByPath(string path)
-        {
             if (string.IsNullOrWhiteSpace(path)) return null;
             var clean = path.Trim('/');
             return Modules.FirstOrDefault(m => m.path.Trim('/').Equals(clean, StringComparison.OrdinalIgnoreCase));
@@ -144,30 +131,38 @@ namespace WEB1.SandBox.Services
 
         public void LoadMockModules()
         {
-            var demoInterfaces = new List<InterfaceDTO>
+            var interfaces = new List<InterfaceDTO>
             {
                 new() 
                 { 
-                    name = "Showcase Componentes", 
-                    description = "Explora los componentes UI de MudBlazor (Botones, Tablas, Formularios, Diálogos).", 
-                    path = "examples/components", 
-                    icon = "bi bi-layers", 
+                    name = "Clientes", 
+                    description = "Gestión de prestatarios, datos de contacto y estado.", 
+                    path = "clientes", 
+                    icon = "fa-solid fa-users", 
                     status = true 
                 },
                 new() 
                 { 
-                    name = "Ejemplo HTTP", 
-                    description = "Demostración de consumo de servicios API y peticiones HTTP autenticadas.", 
-                    path = "examples/http", 
-                    icon = "bi bi-globe", 
+                    name = "Préstamos", 
+                    description = "Otorgamiento de préstamos, cálculo de cuotas y registro de abonos.", 
+                    path = "prestamos", 
+                    icon = "fa-solid fa-sack-dollar", 
                     status = true 
                 },
                 new() 
                 { 
-                    name = "Utilidades", 
-                    description = "Pruebas de FloatingMessage, FocusedMessage (SweetAlert2) y servicios de diseño.", 
-                    path = "examples/utilities", 
-                    icon = "bi bi-tools", 
+                    name = "Usuarios", 
+                    description = "Control de accesos, roles de operadores y contraseñas.", 
+                    path = "usuarios", 
+                    icon = "fa-solid fa-user-gear", 
+                    status = true 
+                },
+                new() 
+                { 
+                    name = "Dashboard", 
+                    description = "Métricas financieras, gráficos interactivos y exportación de reportes.", 
+                    path = "dashboard", 
+                    icon = "fa-solid fa-chart-pie", 
                     status = true 
                 }
             };
@@ -176,12 +171,12 @@ namespace WEB1.SandBox.Services
             {
                 new()
                 {
-                    name = "Módulo de Ejemplos",
-                    description = "Conjunto de pantallas de prueba para el desarrollo con MudBlazor y arquitectura modular.",
-                    path = "examples",
-                    icon = "bi bi-code-square",
+                    name = "Y.A.C. Prestamos",
+                    description = "Módulo principal para control de clientes, préstamos y usuarios.",
+                    path = "operaciones",
+                    icon = "fa-solid fa-hand-holding-dollar",
                     status = true,
-                    interfaceList = demoInterfaces
+                    interfaceList = interfaces
                 }
             };
 

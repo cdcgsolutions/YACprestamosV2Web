@@ -1,0 +1,71 @@
+@using MudBlazor
+@using WEB1.Module.DTOs
+
+<div class="p-2">
+    @if (Historial != null)
+    {
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-sm-4">
+                <div class="p-2 border border-secondary-subtle rounded-3 bg-body-tertiary text-center">
+                    <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Total Préstamo</small>
+                    <span class="fw-bold text-body fs-6">Bs. @Historial.MontoTotalPrestamo.ToString("N2")</span>
+                </div>
+            </div>
+            <div class="col-12 col-sm-4">
+                <div class="p-2 border border-secondary-subtle rounded-3 bg-body-tertiary text-center">
+                    <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Total Abonado</small>
+                    <span class="fw-bold text-success fs-6">Bs. @Historial.TotalAbonado.ToString("N2")</span>
+                </div>
+            </div>
+            <div class="col-12 col-sm-4">
+                <div class="p-2 border border-secondary-subtle rounded-3 bg-body-tertiary text-center">
+                    <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Saldo Restante</small>
+                    <span class="fw-bold text-danger fs-6">Bs. @Historial.SaldoPendiente.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+
+        @if (Historial.Pagos == null || !Historial.Pagos.Any())
+        {
+            <div class="alert alert-info text-center py-3 my-2" role="alert">
+                <i class="fa-solid fa-circle-info me-1"></i> No se han registrado abonos aún para este préstamo.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="bg-body-secondary text-body fw-semibold">
+                        <tr>
+                            <th class="ps-3">#</th>
+                            <th>Fecha y Hora</th>
+                            <th class="text-end pe-3">Monto Abonado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pago in Historial.Pagos)
+                        {
+                            <tr>
+                                <td class="ps-3"><span class="badge bg-body-tertiary text-body border">#@pago.IdPago</span></td>
+                                <td><i class="fa-solid fa-calendar-days me-1 text-primary"></i>@pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-end pe-3 fw-bold text-success">Bs. @pago.MontoAbonado.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="d-flex justify-content-end pt-3 border-top border-secondary-subtle mt-3">
+            <button type="button" class="btn btn-primary px-4 w-100 w-sm-auto" @onclick="OnClose">
+                Cerrar
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ResumenHistorialPagosDTO? Historial { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}
+
