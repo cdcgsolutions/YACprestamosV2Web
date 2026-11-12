@@ -23,4 +23,9 @@
     <Folder Include="Page\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="nuget.config" />
+    <None Remove="nuget.config" />
+  </ItemGroup>
+
 </Project>

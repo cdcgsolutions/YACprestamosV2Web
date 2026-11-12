@@ -37,6 +37,10 @@ builder.Services.AddHttpClient("BackendApi", client =>
 {
     var baseUrl = configuration["Apis:Default"] ?? "https://localhost:7082/";
     client.BaseAddress = new Uri(baseUrl);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
 });
 
 // 5. Configuración de Inyección de Dependencias
