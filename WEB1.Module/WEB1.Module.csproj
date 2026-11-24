@@ -20,7 +20,7 @@
   <ItemGroup>
     <Folder Include="Components\" />
     <Folder Include="DTOs\" />
-    <Folder Include="Page\" />
+    <Folder Include="Page\Instituciones\" />
   </ItemGroup>
 
   <ItemGroup>

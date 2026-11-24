@@ -143,6 +143,14 @@ namespace WEB1.SandBox.Services
                 },
                 new() 
                 { 
+                    name = "Instituciones", 
+                    description = "Catálogo de instituciones y empresas asociadas a clientes.", 
+                    path = "instituciones", 
+                    icon = "fa-solid fa-building", 
+                    status = true 
+                },
+                new() 
+                { 
                     name = "Préstamos", 
                     description = "Otorgamiento de préstamos, cálculo de cuotas y registro de abonos.", 
                     path = "prestamos", 

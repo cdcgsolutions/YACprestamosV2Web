@@ -9,6 +9,14 @@ namespace WEB1.Module.DTOs
         public string EstadoCivil { get; set; } = "Soltero(a)";
         public DateOnly? FechaNacimiento { get; set; }
         public string? Direccion { get; set; }
+
+        // Nuevos atributos
+        public string NumeroTarjetaCredito { get; set; } = string.Empty;
+        public DateOnly? FechaInicioContrato { get; set; }
+        public DateOnly? FechaFinContrato { get; set; }
+        public int? IdInstitucion { get; set; }
+        public string InstitucionNombre { get; set; } = "Sin Institución";
+
         public bool EstaHabilitado { get; set; } = true;
         public DateTime FechaRegistro { get; set; }
     }

@@ -1,0 +1,375 @@
+@page "/instituciones"
+@using MudBlazor
+@using WEB1.Module.DTOs
+@using WEB1.Module.CLIENT.RN
+@using WEB1.Module.Client.Services
+@inject DataMasterApi Api
+@inject FloatingMessage msj
+@inject LayoutService LayoutService
+
+<PageTitle>Instituciones | YAC-Préstamos</PageTitle>
+
+@if (_cargando)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <h6 class="mt-3 text-body fw-bold text-uppercase" style="letter-spacing: 1px;">Cargando Instituciones...</h6>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid mt-3">
+        <!-- Cabecera con Botón de Retroceso estilo SIS.INV.WEB -->
+        <div class="card shadow-sm border-0 bg-body mb-2">
+            <div class="d-flex align-items-center justify-content-center pt-2 px-3 position-relative">
+                <div class="position-absolute start-0 ps-3">
+                    <a href="/" class="btn btn-link text-body p-0" title="Volver al Inicio">
+                        <i class="fa-solid fa-circle-arrow-left fs-5"></i>
+                    </a>
+                </div>
+                <span class="text-uppercase fw-bold text-body" style="letter-spacing: 1px;">
+                    Gestión de Instituciones
+                </span>
+            </div>
+            <div class="card-body p-2 px-3">
+                <div class="row g-2 align-items-center justify-content-between">
+                    <!-- Buscador General -->
+                    <div class="col-12 col-md-6 col-lg-5">
+                        <MudTextField T="string"
+                                      Value="_busqueda"
+                                      ValueChanged="OnSearchChanged"
+                                      Placeholder="Buscar por nombre o dirección..."
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      Clearable="true"
+                                      UserAttributes="@(new Dictionary<string, object> { { "autocomplete", "off" }, { "name", "filtro_busqueda_instituciones" } })"
+                                      Class="bg-body text-body w-100"
+                                      Style="font-size: 0.85rem;"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      AdornmentColor="Color.Primary" />
+                    </div>
+
+                    <!-- Botón Nueva Institución -->
+                    <div class="col-12 col-md-auto d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3 py-2 d-flex align-items-center gap-1 w-100 justify-content-center justify-content-md-start"
+                                @onclick="AbrirModalCrear">
+                            <i class="fa-solid fa-building-circle-check"></i>
+                            <span class="fw-bold">Nueva Institución</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor Responsivo: Tabla en Escritorio / Tarjetas en Móvil -->
+        <div class="card shadow-sm border-0 bg-body mb-3">
+            <!-- Vista Escritorio: Tabla -->
+            <div class="card-body p-0 d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="bg-body-secondary text-body fw-semibold">
+                            <tr>
+                                <th class="ps-3 py-3" style="width: 80px;">ID</th>
+                                <th>Nombre de la Institución</th>
+                                <th>Dirección</th>
+                                <th>Fecha de Registro</th>
+                                <th class="text-center" style="width: 120px;">Estado</th>
+                                <th class="text-center pe-3" style="width: 100px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_instituciones.Any())
+                            {
+                                @foreach (var inst in _instituciones)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <span class="fw-bold text-primary font-monospace">#@inst.IdInstitucion</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                    <i class="fa-solid fa-building small"></i>
+                                                </div>
+                                                <span class="fw-bold text-body">@inst.Nombre</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(inst.Direccion))
+                                            {
+                                                <span class="text-body-secondary">
+                                                    <i class="fa-solid fa-location-dot me-1 text-primary"></i>@inst.Direccion
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-body-tertiary small fst-italic">Sin dirección registrada</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-body-secondary">
+                                                <i class="fa-solid fa-calendar-day me-1 text-primary"></i>@inst.FechaRegistro.ToString("dd/MM/yyyy")
+                                            </small>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" 
+                                                    class="btn btn-sm @(inst.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2"
+                                                    style="font-size: 0.72rem;"
+                                                    @onclick="() => CambiarEstado(inst)">
+                                                @(inst.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                            </button>
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-outline-primary btn-sm border-0" title="Editar Institución"
+                                                        @onclick="() => AbrirModalEditar(inst)">
+                                                    <i class="fa-solid fa-pen-to-square fs-6"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-body-secondary">
+                                        <i class="fa-solid fa-building fs-1 d-block opacity-50 mb-2"></i>
+                                        <span>No se encontraron instituciones registradas.</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vista Móvil: Tarjetas individuales estilo SIS.INV.WEB -->
+            <div class="card-body p-2 d-block d-md-none bg-body-tertiary">
+                @if (_instituciones.Any())
+                {
+                    @foreach (var inst in _instituciones)
+                    {
+                        <div class="card mb-2 border-0 shadow-sm bg-body rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary-subtle">
+                                    <span class="fw-bold text-primary font-monospace" style="font-size: 0.85rem;">#@inst.IdInstitucion</span>
+                                    <button type="button" 
+                                            class="btn btn-sm @(inst.EstaHabilitado ? "btn-success text-white shadow-sm" : "btn-danger text-white opacity-75") fw-bold py-0 px-2" 
+                                            style="font-size: 0.68rem;" 
+                                            @onclick="() => CambiarEstado(inst)">
+                                        @(inst.EstaHabilitado ? "ACTIVO" : "INACTIVO")
+                                    </button>
+                                </div>
+                                <div class="fw-bold text-body fs-6 mb-1">
+                                    <i class="fa-solid fa-building me-1 text-primary"></i>@inst.Nombre
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(inst.Direccion))
+                                {
+                                    <div class="text-body-secondary small mb-2">
+                                        <i class="fa-solid fa-location-dot me-1 text-primary"></i>@inst.Direccion
+                                    </div>
+                                }
+                                <div class="text-body-secondary small mb-2">
+                                    <i class="fa-solid fa-calendar-day me-1 text-primary"></i>Registro: @inst.FechaRegistro.ToString("dd/MM/yyyy")
+                                </div>
+                                <div class="d-flex justify-content-end pt-2 border-top border-secondary-subtle">
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm"
+                                            @onclick="() => AbrirModalEditar(inst)">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i>Editar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-body-secondary bg-body rounded-3">
+                        <i class="fa-solid fa-building fs-2 d-block opacity-50 mb-2"></i>
+                        <span>No se encontraron instituciones registradas.</span>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-body border-0 py-3 d-flex justify-content-center">
+                <MudPagination Selected="_paginaActual"
+                               SelectedChanged="OnPageChanged"
+                               Count="_totalPaginas"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled" />
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Componente sobre Componente: Institución -->
+<AppModal @ref="ModalRef" 
+          Id="modalInstitucion" 
+          Title="@(_esEdicion ? $"Editar Institución #{_institucionModel.IdInstitucion}" : "Registrar Nueva Institución")" 
+          TitleIcon="fa-solid fa-building"
+          HeaderVisible="true" 
+          FooterVisible="false"
+          Centered="true"
+          ModalSize="SizeModal.Large">
+    <ModalInstitucion Institucion="_institucionModel"
+                      EsEdicion="_esEdicion"
+                      Cargando="_guardando"
+                      OnSubmit="GuardarInstitucion"
+                      OnCancel="() => ModalRef.CloseModal()" />
+</AppModal>
+
+@code {
+    private List<InstitucionDTO> _instituciones = new();
+    private bool _cargando = true;
+    private string _busqueda = "";
+    private int _paginaActual = 1;
+    private int _totalPaginas = 1;
+    private const int _tamanoPagina = 10;
+
+    private AppModal ModalRef = default!;
+    private InstitucionDTO _institucionModel = new();
+    private bool _esEdicion = false;
+    private bool _guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.SetTitle("Gestión de Instituciones");
+        await CargarInstituciones(esCargaInicial: true);
+    }
+
+    private async Task CargarInstituciones(bool esCargaInicial = false)
+    {
+        if (esCargaInicial)
+        {
+            _cargando = true;
+        }
+
+        try
+        {
+            var res = await Api.GetInstitucionesPaginadoAndBuscadorAsync(
+                _paginaActual,
+                _tamanoPagina,
+                _busqueda,
+                soloActivos: false);
+
+            if (res.IsSuccess && res.Value != null)
+            {
+                _instituciones = res.Value.value ?? new();
+                _totalPaginas = res.Value.total;
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cargar instituciones");
+            }
+        }
+        catch (Exception ex)
+        {
+            await msj.ShowErrorMessage("Error al cargar instituciones: " + ex.Message);
+        }
+        finally
+        {
+            _cargando = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnSearchChanged(string text)
+    {
+        _busqueda = text;
+        _paginaActual = 1;
+        await CargarInstituciones(esCargaInicial: false);
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _paginaActual = page;
+        await CargarInstituciones(esCargaInicial: false);
+    }
+
+    private async Task AbrirModalCrear()
+    {
+        _esEdicion = false;
+        _institucionModel = new InstitucionDTO 
+        { 
+            EstaHabilitado = true 
+        };
+        await ModalRef.OpenModal();
+    }
+
+    private async Task AbrirModalEditar(InstitucionDTO inst)
+    {
+        _esEdicion = true;
+        _institucionModel = new InstitucionDTO
+        {
+            IdInstitucion = inst.IdInstitucion,
+            Nombre = inst.Nombre,
+            Direccion = inst.Direccion,
+            EstaHabilitado = inst.EstaHabilitado,
+            FechaRegistro = inst.FechaRegistro
+        };
+        await ModalRef.OpenModal();
+    }
+
+    private async Task GuardarInstitucion()
+    {
+        if (string.IsNullOrWhiteSpace(_institucionModel.Nombre))
+        {
+            await msj.ShowWarningMessage("El nombre de la institución es obligatorio.");
+            return;
+        }
+
+        _guardando = true;
+        if (_esEdicion)
+        {
+            var res = await Api.ActualizarInstitucionAsync(_institucionModel.IdInstitucion, _institucionModel);
+            if (res.IsSuccess)
+            {
+                await ModalRef.CloseModal();
+                await msj.ShowSuccessMessage("Institución actualizada exitosamente.");
+                await CargarInstituciones(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al actualizar institución.");
+            }
+        }
+        else
+        {
+            var res = await Api.CrearInstitucionAsync(_institucionModel);
+            if (res.IsSuccess)
+            {
+                await ModalRef.CloseModal();
+                await msj.ShowSuccessMessage("Institución registrada exitosamente.");
+                await CargarInstituciones(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al registrar institución.");
+            }
+        }
+        _guardando = false;
+    }
+
+    private async Task CambiarEstado(InstitucionDTO inst)
+    {
+        var res = await Api.CambiarEstadoInstitucionAsync(inst.IdInstitucion);
+        if (res.IsSuccess)
+        {
+            inst.EstaHabilitado = !inst.EstaHabilitado;
+            await msj.ShowInfoMessage($"Institución {(inst.EstaHabilitado ? "habilitada" : "deshabilitada")}");
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al cambiar estado de institución");
+        }
+    }
+}

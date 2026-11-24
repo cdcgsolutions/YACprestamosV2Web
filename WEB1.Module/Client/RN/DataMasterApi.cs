@@ -131,11 +131,43 @@ namespace WEB1.Module.CLIENT.RN
                 return new Result<T> { IsSuccess = false, ErrorMessage = ex.Message };
             }
         }
+
+        private async Task<Result<T>> SendDeleteAsync<T>(string endpoint)
+        {
+            try
+            {
+                await SetTokenAsync();
+                var response = await _httpClient.DeleteAsync(endpoint);
+                return await ProcessResponseAsync<T>(response);
+            }
+            catch (Exception ex)
+            {
+                return new Result<T> { IsSuccess = false, ErrorMessage = ex.Message };
+            }
+        }
         #endregion
 
         #region CLIENTES
-        public Task<Result<List<ClienteDTO>>> GetClientesAsync() => 
-            SendGetAsync<List<ClienteDTO>>("api/Cliente");
+        public Task<Result<List<ClienteDTO>>> GetClientesAsync(bool soloActivos = false) => 
+            SendGetAsync<List<ClienteDTO>>($"api/Cliente?soloActivos={soloActivos}");
+
+        public Task<Result<ResponseListDTO<ClienteDTO>>> GetClientesPaginadoAndBuscadorAsync(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? q = null,
+            int? idInstitucion = null,
+            bool soloActivos = false)
+        {
+            var query = new List<string>
+            {
+                $"pageNumber={pageNumber}",
+                $"pageSize={pageSize}",
+                $"soloActivos={soloActivos}"
+            };
+            if (!string.IsNullOrWhiteSpace(q)) query.Add($"q={Uri.EscapeDataString(q)}");
+            if (idInstitucion.HasValue) query.Add($"idInstitucion={idInstitucion.Value}");
+            return SendGetAsync<ResponseListDTO<ClienteDTO>>($"api/Cliente/PaginadoAndBuscador?{string.Join("&", query)}");
+        }
 
         public Task<Result<ClienteDTO>> GetClienteByIdAsync(int id) => 
             SendGetAsync<ClienteDTO>($"api/Cliente/{id}");
@@ -150,15 +182,72 @@ namespace WEB1.Module.CLIENT.RN
         }
 
         public Task<Result<ClienteDTO>> CambiarEstadoClienteAsync(int id) => 
-            SendPutAsync<ClienteDTO>($"api/Cliente/CambiarEstado/{id}", new { });
+            SendDeleteAsync<ClienteDTO>($"api/Cliente/{id}");
+        #endregion
+
+        #region INSTITUCIONES
+        public Task<Result<List<InstitucionDTO>>> GetInstitucionesAsync(bool soloActivos = false) => 
+            SendGetAsync<List<InstitucionDTO>>($"api/Institucion?soloActivos={soloActivos}");
+
+        public Task<Result<ResponseListDTO<InstitucionDTO>>> GetInstitucionesPaginadoAndBuscadorAsync(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? q = null,
+            bool soloActivos = false)
+        {
+            var query = new List<string>
+            {
+                $"pageNumber={pageNumber}",
+                $"pageSize={pageSize}",
+                $"soloActivos={soloActivos}"
+            };
+            if (!string.IsNullOrWhiteSpace(q)) query.Add($"q={Uri.EscapeDataString(q)}");
+            return SendGetAsync<ResponseListDTO<InstitucionDTO>>($"api/Institucion/PaginadoAndBuscador?{string.Join("&", query)}");
+        }
+
+        public Task<Result<InstitucionDTO>> GetInstitucionByIdAsync(int id) => 
+            SendGetAsync<InstitucionDTO>($"api/Institucion/{id}");
+
+        public Task<Result<InstitucionDTO>> CrearInstitucionAsync(InstitucionDTO dto) => 
+            SendPostAsync<InstitucionDTO>("api/Institucion/Creacion", dto);
+
+        public Task<Result<InstitucionDTO>> ActualizarInstitucionAsync(int id, InstitucionDTO dto)
+        {
+            if (dto.IdInstitucion == 0) dto.IdInstitucion = id;
+            return SendPutAsync<InstitucionDTO>("api/Institucion/Edicion", dto);
+        }
+
+        public Task<Result<InstitucionDTO>> CambiarEstadoInstitucionAsync(int id) => 
+            SendDeleteAsync<InstitucionDTO>($"api/Institucion/{id}");
         #endregion
 
         #region PRESTAMOS
-        public Task<Result<List<PrestamoDTO>>> GetPrestamosAsync() => 
-            SendGetAsync<List<PrestamoDTO>>("api/Prestamo");
+        public Task<Result<List<PrestamoDTO>>> GetPrestamosAsync(bool soloActivos = false) => 
+            SendGetAsync<List<PrestamoDTO>>($"api/Prestamo?soloActivos={soloActivos}");
+
+        public Task<Result<ResponseListDTO<PrestamoDTO>>> GetPrestamosPaginadoAndBuscadorAsync(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? q = null,
+            string? estado = null,
+            int? idCliente = null)
+        {
+            var query = new List<string>
+            {
+                $"pageNumber={pageNumber}",
+                $"pageSize={pageSize}"
+            };
+            if (!string.IsNullOrWhiteSpace(q)) query.Add($"q={Uri.EscapeDataString(q)}");
+            if (!string.IsNullOrWhiteSpace(estado)) query.Add($"estado={Uri.EscapeDataString(estado)}");
+            if (idCliente.HasValue && idCliente.Value > 0) query.Add($"idCliente={idCliente.Value}");
+            return SendGetAsync<ResponseListDTO<PrestamoDTO>>($"api/Prestamo/PaginadoAndBuscador?{string.Join("&", query)}");
+        }
 
         public Task<Result<List<PrestamoDTO>>> GetPrestamosPorClienteAsync(int idCliente) => 
             SendGetAsync<List<PrestamoDTO>>($"api/Prestamo/PorCliente/{idCliente}");
+
+        public Task<Result<PrestamoDTO>> GetPrestamoByIdAsync(int id) => 
+            SendGetAsync<PrestamoDTO>($"api/Prestamo/{id}");
 
         public Task<Result<PrestamoDTO>> CrearPrestamoAsync(PrestamoCreacionDTO dto) => 
             SendPostAsync<PrestamoDTO>("api/Prestamo/Creacion", dto);
@@ -182,6 +271,27 @@ namespace WEB1.Module.CLIENT.RN
         public Task<Result<List<UsuarioDTO>>> GetUsuariosAsync() => 
             SendGetAsync<List<UsuarioDTO>>("api/Usuario");
 
+        public Task<Result<ResponseListDTO<UsuarioDTO>>> GetUsuariosPaginadoAndBuscadorAsync(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? q = null,
+            string? rol = null,
+            bool soloActivos = false)
+        {
+            var query = new List<string>
+            {
+                $"pageNumber={pageNumber}",
+                $"pageSize={pageSize}",
+                $"soloActivos={soloActivos}"
+            };
+            if (!string.IsNullOrWhiteSpace(q)) query.Add($"q={Uri.EscapeDataString(q)}");
+            if (!string.IsNullOrWhiteSpace(rol)) query.Add($"rol={Uri.EscapeDataString(rol)}");
+            return SendGetAsync<ResponseListDTO<UsuarioDTO>>($"api/Usuario/PaginadoAndBuscador?{string.Join("&", query)}");
+        }
+
+        public Task<Result<UsuarioDTO>> GetUsuarioByIdAsync(int id) => 
+            SendGetAsync<UsuarioDTO>($"api/Usuario/{id}");
+
         public Task<Result<UsuarioDTO>> CrearUsuarioAsync(UsuarioCreacionDTO dto) => 
             SendPostAsync<UsuarioDTO>("api/Usuario/Creacion", dto);
 
@@ -192,7 +302,7 @@ namespace WEB1.Module.CLIENT.RN
         }
 
         public Task<Result<UsuarioDTO>> CambiarEstadoUsuarioAsync(int id) => 
-            SendPutAsync<UsuarioDTO>($"api/Usuario/CambiarEstado/{id}", new { });
+            SendDeleteAsync<UsuarioDTO>($"api/Usuario/{id}");
         #endregion
 
         #region DASHBOARD Y REPORTES

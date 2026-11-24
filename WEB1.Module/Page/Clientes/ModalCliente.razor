@@ -3,19 +3,74 @@
 
 <div class="p-2">
     <div class="row g-3">
+        <!-- Fila 1: Nombre Completo -->
         <div class="col-12">
             <MudTextField T="string" 
-                          Label="Nombre Completo" 
+                          Label="Nombre Completo *" 
                           @bind-Value="Cliente.Nombre" 
+                          Required="true"
                           Variant="Variant.Outlined" 
                           Margin="Margin.Dense"
                           FullWidth="true" />
         </div>
 
+        <!-- Fila 2: Institución y Tarjeta de Crédito -->
+        <div class="col-12 col-md-6">
+            <MudSelect T="int?" 
+                       Label="Institución / Empresa" 
+                       @bind-Value="Cliente.IdInstitucion" 
+                       Variant="Variant.Outlined" 
+                       Margin="Margin.Dense"
+                       Clearable="true"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="int?" Value="@((int?)null)">-- Sin Institución --</MudSelectItem>
+                @foreach (var inst in Instituciones)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)inst.IdInstitucion)">@inst.Nombre</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+
         <div class="col-12 col-md-6">
             <MudTextField T="string" 
-                          Label="Teléfono / Celular" 
+                          Label="N° Tarjeta de Crédito" 
+                          @bind-Value="Cliente.NumeroTarjetaCredito" 
+                          Mask="@(new PatternMask("0000-0000-0000-0000"))"
+                          Required="true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.CreditCard"
+                          Variant="Variant.Outlined" 
+                          Margin="Margin.Dense"
+                          Placeholder="0000-0000-0000-0000"
+                          FullWidth="true" />
+        </div>
+
+        <!-- Fila 3: Vigencia Contrato Laboral -->
+        <div class="col-12 col-md-6">
+            <MudDatePicker Label="Inicio de Contrato" 
+                           @bind-Date="_fechaInicioContrato" 
+                           Variant="Variant.Outlined" 
+                           Margin="Margin.Dense"
+                           Clearable="true"
+                           DateFormat="dd/MM/yyyy" />
+        </div>
+
+        <div class="col-12 col-md-6">
+            <MudDatePicker Label="Fin de Contrato" 
+                           @bind-Date="_fechaFinContrato" 
+                           Variant="Variant.Outlined" 
+                           Margin="Margin.Dense"
+                           Clearable="true"
+                           HelperText="Dejar vacío si es contrato indefinido"
+                           DateFormat="dd/MM/yyyy" />
+        </div>
+
+        <!-- Fila 4: Contacto -->
+        <div class="col-12 col-md-6">
+            <MudTextField T="string" 
+                          Label="Celular" 
                           @bind-Value="Cliente.Celular" 
+                          Required="true"
                           Variant="Variant.Outlined" 
                           Margin="Margin.Dense"
                           FullWidth="true" />
@@ -30,6 +85,7 @@
                           FullWidth="true" />
         </div>
 
+        <!-- Fila 5: Estado Civil y Nacimiento -->
         <div class="col-12 col-md-6">
             <MudSelect T="string" 
                        Label="Estado Civil" 
@@ -46,12 +102,14 @@
 
         <div class="col-12 col-md-6">
             <MudDatePicker Label="Fecha de Nacimiento" 
-                           @bind-Date="FechaNacimiento" 
+                           @bind-Date="_fechaNacimiento" 
                            Variant="Variant.Outlined" 
                            Margin="Margin.Dense"
+                           Clearable="true"
                            DateFormat="dd/MM/yyyy" />
         </div>
 
+        <!-- Fila 6: Dirección -->
         <div class="col-12">
             <MudTextField T="string" 
                           Label="Dirección" 
@@ -96,23 +154,32 @@
 
 @code {
     [Parameter] public ClienteDTO Cliente { get; set; } = new();
-    [Parameter] public DateTime? FechaNacimiento { get; set; }
-    [Parameter] public EventCallback<DateTime?> FechaNacimientoChanged { get; set; }
+    [Parameter] public List<InstitucionDTO> Instituciones { get; set; } = new();
     [Parameter] public bool EsEdicion { get; set; } = false;
     [Parameter] public bool Cargando { get; set; } = false;
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    private DateTime? _fechaNacimiento;
+    private DateTime? _fechaInicioContrato;
+    private DateTime? _fechaFinContrato;
+
+    protected override void OnParametersSet()
+    {
+        _fechaNacimiento = Cliente.FechaNacimiento.HasValue ? Cliente.FechaNacimiento.Value.ToDateTime(TimeOnly.MinValue) : null;
+        _fechaInicioContrato = Cliente.FechaInicioContrato.HasValue ? Cliente.FechaInicioContrato.Value.ToDateTime(TimeOnly.MinValue) : null;
+        _fechaFinContrato = Cliente.FechaFinContrato.HasValue ? Cliente.FechaFinContrato.Value.ToDateTime(TimeOnly.MinValue) : null;
+    }
+
     private async Task HandleSubmit()
     {
-        if (FechaNacimiento.HasValue)
-        {
-            Cliente.FechaNacimiento = DateOnly.FromDateTime(FechaNacimiento.Value);
-        }
+        Cliente.FechaNacimiento = _fechaNacimiento.HasValue ? DateOnly.FromDateTime(_fechaNacimiento.Value) : null;
+        Cliente.FechaInicioContrato = _fechaInicioContrato.HasValue ? DateOnly.FromDateTime(_fechaInicioContrato.Value) : null;
+        Cliente.FechaFinContrato = _fechaFinContrato.HasValue ? DateOnly.FromDateTime(_fechaFinContrato.Value) : null;
+
         if (OnSubmit.HasDelegate)
         {
             await OnSubmit.InvokeAsync();
         }
     }
 }
-
