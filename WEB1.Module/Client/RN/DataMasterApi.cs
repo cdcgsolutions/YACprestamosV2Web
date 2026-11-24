@@ -306,11 +306,47 @@ namespace WEB1.Module.CLIENT.RN
         #endregion
 
         #region DASHBOARD Y REPORTES
-        public Task<Result<DashboardResumenDTO>> GetDashboardResumenAsync() => 
-            SendGetAsync<DashboardResumenDTO>("api/Dashboard/resumen");
+        public Task<Result<DashboardResumenDTO>> GetDashboardResumenAsync(
+            int? idInstitucion = null,
+            string? modalidad = null,
+            string? estado = null,
+            int? mes = null,
+            int? ano = null,
+            DateTime? fechaInicio = null, 
+            DateTime? fechaFin = null)
+        {
+            var query = new List<string>();
+            if (idInstitucion.HasValue) query.Add($"idInstitucion={idInstitucion.Value}");
+            if (!string.IsNullOrWhiteSpace(modalidad) && modalidad != "Todos") query.Add($"modalidad={Uri.EscapeDataString(modalidad)}");
+            if (!string.IsNullOrWhiteSpace(estado) && estado != "Todos") query.Add($"estado={Uri.EscapeDataString(estado)}");
+            if (mes.HasValue && mes.Value > 0) query.Add($"mes={mes.Value}");
+            if (ano.HasValue && ano.Value > 0) query.Add($"ano={ano.Value}");
+            if (fechaInicio.HasValue) query.Add($"fechaInicio={fechaInicio.Value:yyyy-MM-dd}");
+            if (fechaFin.HasValue) query.Add($"fechaFin={fechaFin.Value:yyyy-MM-dd}");
+            var qs = query.Count > 0 ? "?" + string.Join("&", query) : "";
+            return SendGetAsync<DashboardResumenDTO>($"api/Dashboard/resumen{qs}");
+        }
 
-        public Task<Result<byte[]>> GenerarReporteExcelAsync(string titulo = "Reporte General de Cartera de Préstamos") => 
-            SendGetAsync<byte[]>($"api/Dashboard/reporte-excel?titulo={Uri.EscapeDataString(titulo)}");
+        public Task<Result<byte[]>> GenerarReporteExcelAsync(
+            int? idInstitucion = null,
+            string? modalidad = null,
+            string? estado = null,
+            int? mes = null,
+            int? ano = null,
+            DateTime? fechaInicio = null, 
+            DateTime? fechaFin = null, 
+            string titulo = "Reporte Ejecutivo de Cartera de Préstamos")
+        {
+            var query = new List<string> { $"titulo={Uri.EscapeDataString(titulo)}" };
+            if (idInstitucion.HasValue) query.Add($"idInstitucion={idInstitucion.Value}");
+            if (!string.IsNullOrWhiteSpace(modalidad) && modalidad != "Todos") query.Add($"modalidad={Uri.EscapeDataString(modalidad)}");
+            if (!string.IsNullOrWhiteSpace(estado) && estado != "Todos") query.Add($"estado={Uri.EscapeDataString(estado)}");
+            if (mes.HasValue && mes.Value > 0) query.Add($"mes={mes.Value}");
+            if (ano.HasValue && ano.Value > 0) query.Add($"ano={ano.Value}");
+            if (fechaInicio.HasValue) query.Add($"fechaInicio={fechaInicio.Value:yyyy-MM-dd}");
+            if (fechaFin.HasValue) query.Add($"fechaFin={fechaFin.Value:yyyy-MM-dd}");
+            return SendGetAsync<byte[]>($"api/Dashboard/reporte-excel?{string.Join("&", query)}");
+        }
         #endregion
     }
 }

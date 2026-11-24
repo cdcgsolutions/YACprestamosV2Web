@@ -3,23 +3,41 @@
 
 <div class="p-2">
     <div class="row g-3">
+        <!-- Cliente -->
         <div class="col-12">
-            <MudSelect T="int" 
-                       Label="Cliente Prestatario" 
-                       @bind-Value="Prestamo.IdCliente" 
-                       Variant="Variant.Outlined" 
-                       Margin="Margin.Dense"
-                       AnchorOrigin="Origin.BottomCenter">
-                @foreach (var c in Clientes.Where(x => x.EstaHabilitado))
-                {
-                    <MudSelectItem Value="@c.IdCliente">@c.Nombre - @c.Celular</MudSelectItem>
-                }
-            </MudSelect>
+            @if (EsEdicion)
+            {
+                <div class="p-2 rounded-2 bg-body-tertiary border border-secondary-subtle d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-body-secondary d-block">Cliente Prestatario</small>
+                        <span class="fw-bold text-body fs-6">
+                            <i class="fa-solid fa-user me-2 text-primary"></i>@(Prestamo.NombreCliente ?? $"Cliente #{Prestamo.IdCliente}")
+                        </span>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2 py-1">
+                        Préstamo #@Prestamo.IdPrestamo
+                    </span>
+                </div>
+            }
+            else
+            {
+                <MudSelect T="int" 
+                           Label="Cliente Prestatario *" 
+                           @bind-Value="Prestamo.IdCliente" 
+                           Variant="Variant.Outlined" 
+                           Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var c in Clientes.Where(x => x.EstaHabilitado))
+                    {
+                        <MudSelectItem Value="@c.IdCliente">@c.Nombre - @c.Celular</MudSelectItem>
+                    }
+                </MudSelect>
+            }
         </div>
 
         <div class="col-12 col-md-6">
             <MudNumericField T="decimal" 
-                             Label="Monto Principal (Bs.)" 
+                             Label="Monto Principal (Bs.) *" 
                              @bind-Value="Prestamo.Monto" 
                              Min="1" 
                              Variant="Variant.Outlined" 
@@ -28,7 +46,7 @@
 
         <div class="col-12 col-md-6">
             <MudNumericField T="decimal" 
-                             Label="Interés (%)" 
+                             Label="Interés (%) *" 
                              @bind-Value="Prestamo.PorcentajeInteres" 
                              Min="0" 
                              Variant="Variant.Outlined" 
@@ -53,13 +71,36 @@
         <div class="col-12">
             <div class="p-3 bg-body-tertiary rounded-3 border border-secondary-subtle">
                 <div class="d-flex justify-content-between text-body-secondary small mb-1">
-                    <span>Interés a cobrar:</span>
+                    <span>Monto Principal:</span>
+                    <span class="fw-bold text-body">Bs. @Prestamo.Monto.ToString("N2")</span>
+                </div>
+                <div class="d-flex justify-content-between text-body-secondary small mb-1">
+                    <span>Interés (@Prestamo.PorcentajeInteres%):</span>
                     <span class="fw-bold text-body">Bs. @((Prestamo.Monto * (Prestamo.PorcentajeInteres / 100m)).ToString("N2"))</span>
                 </div>
-                <div class="d-flex justify-content-between text-primary fs-6 fw-bold border-top border-secondary-subtle pt-2">
+                <div class="d-flex justify-content-between text-primary fs-6 fw-bold border-top border-secondary-subtle pt-2 mb-1">
                     <span>Total a Devolver:</span>
-                    <span>Bs. @((Prestamo.Monto + (Prestamo.Monto * (Prestamo.PorcentajeInteres / 100m))).ToString("N2"))</span>
+                    <span>Bs. @MontoTotalCalculado.ToString("N2")</span>
                 </div>
+
+                @if (EsEdicion)
+                {
+                    <div class="d-flex justify-content-between small text-success border-top border-secondary-subtle pt-1 mb-1">
+                        <span>Abonado hasta la fecha:</span>
+                        <span class="fw-bold">- Bs. @TotalAbonado.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-6 fw-bold border-top border-secondary-subtle pt-1 @(NuevoSaldoCalculado <= 0 ? "text-success" : "text-danger")">
+                        <span>Nuevo Saldo Pendiente:</span>
+                        <span>Bs. @(NuevoSaldoCalculado < 0 ? "0.00" : NuevoSaldoCalculado.ToString("N2"))</span>
+                    </div>
+                    @if (MontoTotalCalculado < TotalAbonado)
+                    {
+                        <div class="alert alert-warning py-1 px-2 mt-2 mb-0 small text-danger fw-semibold">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                            El nuevo total no puede ser inferior a lo que el cliente ya abonó (Bs. @TotalAbonado.ToString("N2")).
+                        </div>
+                    }
+                }
             </div>
         </div>
 
@@ -67,7 +108,9 @@
             <button type="button" class="btn btn-outline-secondary px-4 w-100 w-sm-auto" @onclick="OnCancel" disabled="@Cargando">
                 Cancelar
             </button>
-            <button type="button" class="btn btn-primary px-4 shadow-sm w-100 w-sm-auto" @onclick="HandleSubmit" disabled="@(Cargando || Prestamo.Monto <= 0 || Prestamo.IdCliente <= 0)">
+            <button type="button" class="btn btn-primary px-4 shadow-sm w-100 w-sm-auto" 
+                    @onclick="HandleSubmit" 
+                    disabled="@(Cargando || Prestamo.Monto <= 0 || (EsEdicion ? MontoTotalCalculado < TotalAbonado : Prestamo.IdCliente <= 0))">
                 @if (Cargando)
                 {
                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -76,7 +119,7 @@
                 else
                 {
                     <i class="fa-solid fa-circle-check me-1"></i>
-                    <span>Otorgar Préstamo</span>
+                    <span>@(EsEdicion ? "Guardar Cambios" : "Otorgar Préstamo")</span>
                 }
             </button>
         </div>
@@ -84,11 +127,19 @@
 </div>
 
 @code {
-    [Parameter] public PrestamoCreacionDTO Prestamo { get; set; } = new();
+    [Parameter] public PrestamoDTO Prestamo { get; set; } = new();
     [Parameter] public List<ClienteDTO> Clientes { get; set; } = new();
+    [Parameter] public bool EsEdicion { get; set; } = false;
+    [Parameter] public decimal TotalAbonado { get; set; } = 0;
     [Parameter] public bool Cargando { get; set; } = false;
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+
+    private decimal MontoTotalCalculado =>
+        Math.Round(Prestamo.Monto + (Prestamo.Monto * (Prestamo.PorcentajeInteres / 100m)), 2);
+
+    private decimal NuevoSaldoCalculado =>
+        Math.Round(MontoTotalCalculado - TotalAbonado, 2);
 
     private async Task HandleSubmit()
     {
@@ -98,4 +149,3 @@
         }
     }
 }
-

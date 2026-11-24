@@ -138,6 +138,13 @@ else
                                         </td>
                                         <td class="text-center pe-3">
                                             <div class="d-flex justify-content-center gap-1">
+                                                <!-- Botón Editar Préstamo -->
+                                                <button class="btn btn-outline-primary btn-sm border-0 px-2"
+                                                        title="Editar Préstamo (Monto/Interés)"
+                                                        @onclick="@(() => AbrirModalEditar(p))">
+                                                    <i class="fa-solid fa-pen-to-square fs-6"></i>
+                                                </button>
+
                                                 <!-- Botón Abonar estilo SIS.INV.WEB -->
                                                 <button class="btn btn-sm btn-success text-white px-2 py-1 shadow-sm d-flex align-items-center gap-1"
                                                         title="Registrar Abono"
@@ -223,6 +230,12 @@ else
                                 </div>
 
                                 <div class="d-flex gap-2 pt-2 border-top border-secondary-subtle">
+                                    <button class="btn btn-outline-primary btn-sm px-3 py-2 d-flex align-items-center justify-content-center gap-1"
+                                            title="Editar Préstamo"
+                                            @onclick="@(() => AbrirModalEditar(p))">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Editar</span>
+                                    </button>
                                     <button class="btn btn-sm btn-success text-white flex-grow-1 py-2 shadow-sm d-flex align-items-center justify-content-center gap-1"
                                             disabled="@(p.Estado == "Pagado" || p.SaldoPendiente <= 0)"
                                             @onclick="@(() => AbrirModalAbonar(p))">
@@ -260,16 +273,18 @@ else
     </div>
 }
 
-<!-- Modal Componente sobre Componente: Nuevo Préstamo -->
+<!-- Modal Componente sobre Componente: Nuevo / Editar Préstamo -->
 <AppModal @ref="ModalPrestamoRef" 
           Id="modalPrestamo" 
-          Title="Otorgar Nuevo Préstamo" 
-          TitleIcon="fa-solid fa-hand-holding-dollar"
+          Title="@(_esEdicion ? $"Editar Préstamo #{_prestamoModel.IdPrestamo}" : "Otorgar Nuevo Préstamo")" 
+          TitleIcon="@(_esEdicion ? "fa-solid fa-pen-to-square" : "fa-solid fa-hand-holding-dollar")"
           HeaderVisible="true" 
           FooterVisible="false"
           Centered="true">
-    <ModalPrestamo Prestamo="_prestamoCreacion"
+    <ModalPrestamo Prestamo="_prestamoModel"
                    Clientes="_clientes"
+                   EsEdicion="_esEdicion"
+                   TotalAbonado="_totalAbonadoPrestamo"
                    Cargando="_guardando"
                    OnSubmit="GuardarPrestamo"
                    OnCancel="() => ModalPrestamoRef.CloseModal()" />
@@ -315,7 +330,10 @@ else
     private AppModal ModalAbonoRef = default!;
     private AppModal ModalHistorialRef = default!;
 
-    private PrestamoCreacionDTO _prestamoCreacion = new();
+    private PrestamoDTO _prestamoModel = new();
+    private bool _esEdicion = false;
+    private decimal _totalAbonadoPrestamo = 0;
+
     private PrestamoDTO? _prestamoSeleccionado;
     private decimal _montoAbonar = 0;
     private ResumenHistorialPagosDTO? _historial;
@@ -397,7 +415,9 @@ else
             return;
         }
 
-        _prestamoCreacion = new PrestamoCreacionDTO
+        _esEdicion = false;
+        _totalAbonadoPrestamo = 0;
+        _prestamoModel = new PrestamoDTO
         {
             IdCliente = _clientes.First(c => c.EstaHabilitado).IdCliente,
             Monto = 1000,
@@ -407,19 +427,82 @@ else
         await ModalPrestamoRef.OpenModal();
     }
 
+    private async Task AbrirModalEditar(PrestamoDTO p)
+    {
+        _esEdicion = true;
+        _totalAbonadoPrestamo = Math.Max(0, p.MontoTotal - p.SaldoPendiente);
+        _prestamoModel = new PrestamoDTO
+        {
+            IdPrestamo = p.IdPrestamo,
+            IdCliente = p.IdCliente,
+            NombreCliente = p.NombreCliente,
+            Monto = p.Monto,
+            PorcentajeInteres = p.PorcentajeInteres,
+            ModalidadCobro = p.ModalidadCobro,
+            MontoTotal = p.MontoTotal,
+            SaldoPendiente = p.SaldoPendiente,
+            Estado = p.Estado
+        };
+        await ModalPrestamoRef.OpenModal();
+    }
+
     private async Task GuardarPrestamo()
     {
-        _guardando = true;
-        var res = await Api.CrearPrestamoAsync(_prestamoCreacion);
-        if (res.IsSuccess)
+        if (_prestamoModel.Monto <= 0)
         {
-            await ModalPrestamoRef.CloseModal();
-            await msj.ShowSuccessMessage("¡Préstamo otorgado exitosamente!");
-            await CargarDatos(esCargaInicial: false);
+            await msj.ShowWarningMessage("El monto del préstamo debe ser mayor a 0.");
+            return;
+        }
+
+        if (_prestamoModel.PorcentajeInteres < 0)
+        {
+            await msj.ShowWarningMessage("El interés no puede ser negativo.");
+            return;
+        }
+
+        _guardando = true;
+        if (_esEdicion)
+        {
+            var res = await Api.ActualizarPrestamoAsync(_prestamoModel.IdPrestamo, _prestamoModel);
+            if (res.IsSuccess)
+            {
+                await ModalPrestamoRef.CloseModal();
+                await msj.ShowSuccessMessage("¡Préstamo actualizado y recalculado exitosamente!");
+                await CargarDatos(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al actualizar préstamo");
+            }
         }
         else
         {
-            await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al registrar préstamo");
+            if (_prestamoModel.IdCliente <= 0)
+            {
+                await msj.ShowWarningMessage("Debe seleccionar un cliente prestatario.");
+                _guardando = false;
+                return;
+            }
+
+            var creacionDto = new PrestamoCreacionDTO
+            {
+                IdCliente = _prestamoModel.IdCliente,
+                Monto = _prestamoModel.Monto,
+                PorcentajeInteres = _prestamoModel.PorcentajeInteres,
+                ModalidadCobro = _prestamoModel.ModalidadCobro
+            };
+
+            var res = await Api.CrearPrestamoAsync(creacionDto);
+            if (res.IsSuccess)
+            {
+                await ModalPrestamoRef.CloseModal();
+                await msj.ShowSuccessMessage("¡Préstamo otorgado exitosamente!");
+                await CargarDatos(esCargaInicial: false);
+            }
+            else
+            {
+                await msj.ShowErrorMessage(res.ErrorMessage ?? "Error al registrar préstamo");
+            }
         }
         _guardando = false;
     }
