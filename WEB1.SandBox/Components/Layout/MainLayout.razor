@@ -113,7 +113,7 @@
         <div style="@($"height:Calc(100dvh - {(GetAppMode() != "PRO" ? "84px" : "60px")}); margin-top:{(GetAppMode() != "PRO" ? "84px" : "60px")};")" class="d-flex overflow-hidden">
             <CascadingValue Value="@valuesParameters">
                 <CascadingValue Value="@valuesParameters?.Modules">
-                    <main class="h-100 w-100 overflow-auto bg-body-tertiary p-4">
+                    <main class="h-100 w-100 overflow-auto bg-body-tertiary p-1 p-sm-2 p-md-3">
                         @Body
                     </main>
                 </CascadingValue>
