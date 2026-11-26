@@ -99,6 +99,12 @@
 
                         <li><hr class="dropdown-divider"></li>
                         <li>
+                            <button class="dropdown-item py-2 text-body d-flex align-items-center" @onclick="AbrirCambioContrasenaManual">
+                                <i class="fa-solid fa-key me-2 text-primary"></i> Cambiar Contraseña
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
                             <button class="dropdown-item py-2 text-danger d-flex align-items-center" @onclick="HandleLogout">
                                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
                             </button>
@@ -109,6 +115,7 @@
         </header>
 
         <CommandPalette @ref="commandPalette" Modules="@valuesParameters?.Modules" />
+        <ModalCambiarContrasena @ref="_modalCambiarContrasena" OnContrasenaCambiada="OnContrasenaActualizada" />
 
         <div style="@($"height:Calc(100dvh - {(GetAppMode() != "PRO" ? "84px" : "60px")}); margin-top:{(GetAppMode() != "PRO" ? "84px" : "60px")};")" class="d-flex overflow-hidden">
             <CascadingValue Value="@valuesParameters">
@@ -133,6 +140,9 @@
     private string UserRole { get; set; } = "Usuario";
     private string UserEmail { get; set; } = string.Empty;
     private CommandPalette? commandPalette;
+    private ModalCambiarContrasena? _modalCambiarContrasena;
+    private bool _debeCambiarContrasena = false;
+    private bool _modalAbiertoAuto = false;
 
     private bool _isDarkMode = false;
     private string _currentTheme = "auto";
@@ -172,6 +182,13 @@
             }
             catch {}
         }
+
+        // Si el usuario debe cambiar su contraseña por ser su primer inicio o reset
+        if (_debeCambiarContrasena && !_modalAbiertoAuto && _modalCambiarContrasena != null)
+        {
+            _modalAbiertoAuto = true;
+            _modalCambiarContrasena.Abrir(esObligatorio: true);
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -185,8 +202,25 @@
             {
                 UserEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? $"{user.Identity.Name}@sistema.local";
                 UserRole = user.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+
+                var claimDebeCambiar = user.FindFirst("DebeCambiarContrasena")?.Value 
+                                    ?? user.Claims.FirstOrDefault(c => c.Type == "DebeCambiarContrasena")?.Value;
+
+                _debeCambiarContrasena = claimDebeCambiar?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
             }
         }
+    }
+
+    private void AbrirCambioContrasenaManual()
+    {
+        _modalCambiarContrasena?.Abrir(esObligatorio: false);
+    }
+
+    private void OnContrasenaActualizada()
+    {
+        _debeCambiarContrasena = false;
+        _modalAbiertoAuto = false;
+        StateHasChanged();
     }
 
     public void Dispose()

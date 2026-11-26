@@ -67,5 +67,41 @@ namespace WEB1.SandBox.Services
             }
             return null;
         }
+
+        public async Task<(bool Success, string Message)> CambiarContrasenaAsync(CambiarContrasenaDTO model)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await _httpClient.PostAsJsonAsync("api/Auth/cambiar-contrasena", model);
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponseDTO>>();
+
+                if (response.IsSuccessStatusCode && result != null && result.IsSuccess && result.Value != null)
+                {
+                    if (_authStateProvider is CustomAuthStateProvider customProvider)
+                    {
+                        await customProvider.MarkUserAsAuthenticated(result.Value.Token);
+                    }
+                    return (true, result.Message ?? "Contraseña actualizada exitosamente.");
+                }
+
+                var errorMsg = result?.Message ?? "No se pudo actualizar la contraseña.";
+                if (result?.Errors != null && result.Errors.Count > 0)
+                {
+                    errorMsg += $" ({string.Join(", ", result.Errors)})";
+                }
+
+                return (false, errorMsg);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Error al conectar con el servidor: {ex.Message}");
+            }
+        }
     }
 }

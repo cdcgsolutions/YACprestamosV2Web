@@ -1,0 +1,345 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using WEB1.SandBox.DTOs
+@using WEB1.SandBox.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (_isOpen)
+{
+    <div class="modal fade show d-block" 
+         tabindex="-1" 
+         style="@(EsObligatorio 
+             ? "position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.96) !important; backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); z-index: 99999; overflow-y: auto;" 
+             : "position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 2050; overflow-y: auto;")" 
+         role="dialog" 
+         aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 490px;">
+            <div class="modal-content rounded-4 border-0 shadow-lg bg-body overflow-hidden">
+                <!-- Barra superior decorativa -->
+                <div class="w-100" style="height: 4px; background: linear-gradient(90deg, var(--bs-primary) 0%, #0dcaf0 100%);"></div>
+
+                @if (EsObligatorio)
+                {
+                    <!-- Encabezado de Primer Inicio de Sesión -->
+                    <div class="text-center pt-4 px-4 pb-2">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 64px; height: 64px;">
+                            <i class="fa-solid fa-shield-halved fs-2"></i>
+                        </div>
+                        <h4 class="fw-bold text-body mb-1">Primer Inicio de Sesión</h4>
+                        <p class="text-body-secondary small mb-0">
+                            Por motivos de seguridad, debes crear una nueva contraseña segura para reemplazar la provisional.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Encabezado de Cambio Voluntario -->
+                    <div class="modal-header border-bottom border-secondary-subtle px-4 pt-4 pb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fa-solid fa-key fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-body mb-0">Cambiar Contraseña</h5>
+                                <small class="text-body-secondary">Actualiza tu clave de acceso personal</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="Cerrar" disabled="@_cargando"></button>
+                    </div>
+                }
+
+                <div class="modal-body px-4 py-3">
+                    @if (!string.IsNullOrWhiteSpace(_mensajeError))
+                    {
+                        <div class="alert alert-danger border-0 rounded-3 p-2 mb-3 small d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
+                            <span>@_mensajeError</span>
+                        </div>
+                    }
+
+                    <div class="row g-3">
+                        @if (!EsObligatorio)
+                        {
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold text-body mb-1">Contraseña Actual *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary border-secondary-subtle">
+                                        <i class="fa-solid fa-lock text-body-secondary small"></i>
+                                    </span>
+                                    <input type="@(_mostrarClaves ? "text" : "password")" 
+                                           class="form-control" 
+                                           placeholder="Ingresa tu contraseña actual" 
+                                           @bind="_contrasenaActual" 
+                                           @bind:event="oninput"
+                                           disabled="@_cargando" />
+                                </div>
+                            </div>
+                        }
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold text-body mb-1">Nueva Contraseña *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-secondary-subtle">
+                                    <i class="fa-solid fa-key text-body-secondary small"></i>
+                                </span>
+                                <input type="@(_mostrarClaves ? "text" : "password")" 
+                                       class="form-control" 
+                                       placeholder="Escribe tu nueva contraseña" 
+                                       @bind="_nuevaContrasena" 
+                                       @bind:event="oninput"
+                                       disabled="@_cargando" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="() => _mostrarClaves = !_mostrarClaves">
+                                    <i class="fa-solid @(_mostrarClaves ? "fa-eye-slash" : "fa-eye") small"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold text-body mb-1">Confirmar Nueva Contraseña *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-secondary-subtle">
+                                    <i class="fa-solid fa-check-double text-body-secondary small"></i>
+                                </span>
+                                <input type="@(_mostrarClaves ? "text" : "password")" 
+                                       class="form-control" 
+                                       placeholder="Vuelve a escribir la nueva contraseña" 
+                                       @bind="_confirmarContrasena" 
+                                       @bind:event="oninput"
+                                       disabled="@_cargando" />
+                            </div>
+                        </div>
+
+                        <!-- Panel de Requisitos de Seguridad -->
+                        <div class="col-12">
+                            <div class="p-3 rounded-3 bg-body-tertiary border border-secondary-subtle">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small fw-semibold text-body">
+                                        <i class="fa-solid fa-shield-cat me-1 text-primary"></i>Requisitos de seguridad:
+                                    </span>
+                                    @if (FormularioValido)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="fa-solid fa-check me-1"></i>Segura
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-body-secondary border border-secondary-subtle">
+                                            Pendiente
+                                        </span>
+                                    }
+                                </div>
+                                <ul class="list-unstyled mb-0 small text-body-secondary d-flex flex-column gap-1">
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid @(TieneMinimo6 ? "fa-circle-check text-success" : "fa-circle text-body-tertiary")" style="width: 14px;"></i>
+                                        <span class="@(TieneMinimo6 ? "text-success fw-medium" : "")">Mínimo 6 caracteres</span>
+                                    </li>
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid @(TieneLetra && TieneNumero ? "fa-circle-check text-success" : "fa-circle text-body-tertiary")" style="width: 14px;"></i>
+                                        <span class="@(TieneLetra && TieneNumero ? "text-success fw-medium" : "")">Debe incluir al menos una letra y un número</span>
+                                    </li>
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid @(string.IsNullOrEmpty(_nuevaContrasena) ? "fa-circle text-body-tertiary" : (EsDiferenteAInseguras ? "fa-circle-check text-success" : "fa-circle-xmark text-danger"))" style="width: 14px;"></i>
+                                        <span class="@(string.IsNullOrEmpty(_nuevaContrasena) ? "" : (EsDiferenteAInseguras ? "text-success fw-medium" : "text-danger fw-semibold"))">
+                                            No usar claves obvias (ej. "12345", "password", "admin")
+                                        </span>
+                                    </li>
+                                    @if (!EsObligatorio)
+                                    {
+                                        <li class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid @(string.IsNullOrEmpty(_nuevaContrasena) || string.IsNullOrEmpty(_contrasenaActual) ? "fa-circle text-body-tertiary" : (EsDiferenteActual ? "fa-circle-check text-success" : "fa-circle-xmark text-danger"))" style="width: 14px;"></i>
+                                            <span class="@(!string.IsNullOrEmpty(_nuevaContrasena) && !string.IsNullOrEmpty(_contrasenaActual) && !EsDiferenteActual ? "text-danger fw-semibold" : "")">
+                                                Diferente a la contraseña actual
+                                            </span>
+                                        </li>
+                                    }
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid @(Coinciden ? "fa-circle-check text-success" : "fa-circle text-body-tertiary")" style="width: 14px;"></i>
+                                        <span class="@(Coinciden ? "text-success fw-medium" : "")">Las contraseñas coinciden</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top border-secondary-subtle px-4 py-3 d-flex @(EsObligatorio ? "justify-content-between" : "justify-content-end") gap-2 bg-body-tertiary">
+                    @if (EsObligatorio)
+                    {
+                        <button type="button" class="btn btn-link text-body-secondary text-decoration-none btn-sm p-0" @onclick="CerrarSesionAsync" disabled="@_cargando">
+                            <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Cerrar Sesión
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3 rounded-pill" @onclick="Cerrar" disabled="@_cargando">
+                            Cancelar
+                        </button>
+                    }
+
+                    <button type="button" 
+                            class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold shadow-sm @(!FormularioValido && !_cargando ? "opacity-75" : "")" 
+                            @onclick="GuardarAsync" 
+                            disabled="@(_cargando || !FormularioValido)">
+                        @if (_cargando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-floppy-disk me-1"></i>
+                            <span>@(EsObligatorio ? "Guardar y Entrar" : "Actualizar Contraseña")</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool EsObligatorio { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnContrasenaCambiada { get; set; }
+
+    private bool _isOpen = false;
+    private bool _cargando = false;
+    private bool _mostrarClaves = false;
+    private string _contrasenaActual = string.Empty;
+    private string _nuevaContrasena = string.Empty;
+    private string _confirmarContrasena = string.Empty;
+    private string? _mensajeError;
+
+    private static readonly string[] ClavesInseguras = new[] { "12345", "123456", "12345678", "123456789", "password", "admin", "admin123", "qwerty", "contrasena" };
+
+    private bool TieneMinimo6 => !string.IsNullOrWhiteSpace(_nuevaContrasena) && _nuevaContrasena.Trim().Length >= 6;
+    private bool TieneLetra => !string.IsNullOrEmpty(_nuevaContrasena) && _nuevaContrasena.Any(char.IsLetter);
+    private bool TieneNumero => !string.IsNullOrEmpty(_nuevaContrasena) && _nuevaContrasena.Any(char.IsDigit);
+    private bool EsDiferenteAInseguras => string.IsNullOrWhiteSpace(_nuevaContrasena) || !ClavesInseguras.Contains(_nuevaContrasena.Trim().ToLowerInvariant());
+    private bool EsDiferenteActual => string.IsNullOrWhiteSpace(_contrasenaActual) || string.IsNullOrWhiteSpace(_nuevaContrasena) || !string.Equals(_contrasenaActual.Trim(), _nuevaContrasena.Trim(), StringComparison.OrdinalIgnoreCase);
+    private bool Coinciden => !string.IsNullOrWhiteSpace(_nuevaContrasena) && !string.IsNullOrWhiteSpace(_confirmarContrasena) && _nuevaContrasena.Trim() == _confirmarContrasena.Trim();
+
+    private bool FormularioValido =>
+        TieneMinimo6 &&
+        TieneLetra &&
+        TieneNumero &&
+        EsDiferenteAInseguras &&
+        (EsObligatorio || (!string.IsNullOrWhiteSpace(_contrasenaActual) && EsDiferenteActual)) &&
+        Coinciden;
+
+    public void Abrir(bool esObligatorio = false)
+    {
+        EsObligatorio = esObligatorio;
+        _contrasenaActual = string.Empty;
+        _nuevaContrasena = string.Empty;
+        _confirmarContrasena = string.Empty;
+        _mensajeError = null;
+        _cargando = false;
+        _mostrarClaves = false;
+        _isOpen = true;
+        StateHasChanged();
+    }
+
+    public void Cerrar()
+    {
+        if (EsObligatorio) return;
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task CerrarSesionAsync()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private async Task GuardarAsync()
+    {
+        _mensajeError = null;
+
+        if (!EsObligatorio && string.IsNullOrWhiteSpace(_contrasenaActual))
+        {
+            _mensajeError = "Por favor ingresa tu contraseña actual.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_nuevaContrasena))
+        {
+            _mensajeError = "La nueva contraseña es obligatoria.";
+            return;
+        }
+
+        if (!TieneMinimo6)
+        {
+            _mensajeError = "La nueva contraseña debe tener al menos 6 caracteres.";
+            return;
+        }
+
+        if (!TieneLetra || !TieneNumero)
+        {
+            _mensajeError = "La nueva contraseña debe combinar al menos una letra y un número.";
+            return;
+        }
+
+        if (!EsDiferenteAInseguras)
+        {
+            _mensajeError = "La contraseña elegida es demasiado predecible o insegura (ej. 12345). Por favor elige una diferente.";
+            return;
+        }
+
+        if (!EsObligatorio && !EsDiferenteActual)
+        {
+            _mensajeError = "La nueva contraseña no puede ser igual a tu contraseña actual.";
+            return;
+        }
+
+        if (!Coinciden)
+        {
+            _mensajeError = "La nueva contraseña y su confirmación no coinciden.";
+            return;
+        }
+
+        _cargando = true;
+        try
+        {
+            var dto = new CambiarContrasenaDTO
+            {
+                ContrasenaActual = EsObligatorio ? null : _contrasenaActual.Trim(),
+                NuevaContrasena = _nuevaContrasena.Trim()
+            };
+
+            var (success, message) = await AuthService.CambiarContrasenaAsync(dto);
+            if (success)
+            {
+                try
+                {
+                    await JS.InvokeVoidAsync("toastr.success", "¡Contraseña actualizada exitosamente!", "Seguridad");
+                }
+                catch { }
+
+                _isOpen = false;
+                if (OnContrasenaCambiada.HasDelegate)
+                {
+                    await OnContrasenaCambiada.InvokeAsync();
+                }
+            }
+            else
+            {
+                _mensajeError = message;
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error inesperado: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+            StateHasChanged();
+        }
+    }
+}
