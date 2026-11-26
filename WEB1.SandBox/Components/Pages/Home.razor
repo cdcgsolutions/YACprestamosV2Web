@@ -1,139 +1,107 @@
 @page "/"
 @using Microsoft.AspNetCore.Authorization
-@using WEB1.SandBox.DTOs
+@using System.Globalization
 @using WEB1.SandBox.Services
-@using WEB1.Module.Client.Services
+@using WEB1.SandBox.DTOs
+@using WEB1.SandBox.Helpers
 @attribute [Authorize]
 @inject NavigationManager NavigationManager
 @inject LayoutService LayoutService
 @inject ModuleService ModuleService
 @inject IConfiguration Configuration
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Inicio | @(Configuration["app:Name"] ?? "YAC. PRESTAMOS")</PageTitle>
+<PageTitle>Inicio | @(Configuration["app:Name"] ?? "YAC-Préstamos")</PageTitle>
 
-<div class="container-fluid p-4 d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
-    @if (Modules != null && Modules.Any())
-    {
-        <div class="row g-4 justify-content-center w-100">
-            @foreach (var module in Modules.OrderBy(x => x.name))
-            {
-                if (module.interfaceList != null && module.interfaceList.Any())
-                {
-                    <div class="col-12 col-md-6 col-lg-5 col-xl-4">
-                        <div class="card h-100 border-0 shadow-sm hover-elevate rounded-4 overflow-hidden module-card bg-body">
-                            <div class="card-header bg-transparent border-0 pt-4 pb-0 text-center">
-                                <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" 
-                                     style="width: 64px; height: 64px; border-radius: 50%;">
-                                    <i class="@module.icon fs-2"></i>
-                                </div>
-                                <h5 class="card-title fw-bold mb-0 text-body">@module.name</h5>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-unstyled mb-0 mt-2">
-                                    @foreach (var iface in module.interfaceList.Take(4))
-                                    {
-                                        <li class="mb-2">
-                                            <a href="@iface.path" class="text-decoration-none text-body d-flex align-items-center p-2 rounded hover-bg-light transition-all">
-                                                <i class="@iface.icon me-2 text-primary" style="width: 22px; text-align: center;"></i>
-                                                <span class="text-truncate fw-semibold">@iface.name</span>
-                                            </a>
-                                        </li>
-                                    }
-                                    @if (module.interfaceList.Count > 4)
-                                    {
-                                        <li class="text-center mt-2">
-                                            <span class="badge bg-body-tertiary text-body-secondary rounded-pill border">+@(module.interfaceList.Count - 4) más</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                            <div class="card-footer bg-transparent border-0 pb-4 pt-0 text-center">
-                                <button class="btn btn-outline-primary rounded-pill px-4 btn-sm fw-bold" @onclick="() => OpenModule(module)">
-                                    Ver Todo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-        </div>
-    }
-    else
-    {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando módulos...</span>
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
+    <!-- Encabezado Minimalista y Ejecutivo -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom border-secondary-subtle gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="text-body-secondary small">
+                    <i class="fa-regular fa-calendar me-1"></i> @FechaActualFormateada
+                </span>
             </div>
-            <p class="mt-3 text-body-secondary">Cargando accesos...</p>
-        </div>
-    }
-</div>
-
-<!-- Modal Bootstrap AppModal con FontAwesome -->
-<AppModal @ref="Minterfaces" Title="@(selectedModule?.name)" TitleIcon="@selectedModule?.icon" HeaderVisible="true" Centered="true" Id="moduleModal">
-    <div class="p-2">
-        <div class="position-relative mb-4">
-            <i class="fa-solid fa-magnifying-glass position-absolute text-body-secondary" style="top: 14px; left: 16px;"></i>
-            <input class="form-control form-control-lg rounded-pill border ps-5 pe-4" 
-                   placeholder="Filtrar opciones..." 
-                   @bind-value="@texti" 
-                   @bind-value:event="oninput" />
-        </div>
-        <div class="row g-3">
-            @if (selectedModule?.interfaceList != null)
-            {
-                @foreach (var item in selectedModule.interfaceList.Where(i => string.IsNullOrWhiteSpace(texti) || i.name.Contains(texti, StringComparison.OrdinalIgnoreCase)))
-                {
-                    <div class="col-md-6">
-                        <div @onclick="() => irPagina(item)" 
-                             class="d-flex align-items-center p-3 rounded border hover-shadow cursor-pointer h-100 transition-all bg-body">
-                            <div class="me-3 text-primary bg-primary bg-opacity-10 p-2 rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                <i class="@item.icon fs-5"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold text-body">@item.name</h6>
-                                <small class="text-body-secondary">Ir a la página</small>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
+            <h2 class="fw-bold text-body mb-0">
+                @MensajeBienvenida, <span>@(_userName ?? "Usuario")</span>
+            </h2>
         </div>
     </div>
-</AppModal>
 
-<style>
-    .hover-elevate { transition: transform 0.2s, box-shadow 0.2s; }
-    .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-    .hover-bg-light:hover { background-color: rgba(var(--bs-primary-rgb), 0.08); color: var(--bs-primary) !important; }
-    .hover-bg-light:hover i { color: var(--bs-primary) !important; }
-    .transition-all { transition: all 0.2s ease; }
-    .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: var(--bs-primary) !important; }
-    .cursor-pointer { cursor: pointer; }
-</style>
+    <!-- Cuadrícula de Interfaces del Sistema -->
+    <div class="row g-3 g-md-4">
+        @for (int i = 0; i < _interfaces.Count; i++)
+        {
+            var item = _interfaces[i];
+            var theme = BootstrapColorHelper.GetTheme(i);
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-body hub-card @theme.CardThemeClass p-4 cursor-pointer"
+                     @onclick="() => NavegarA(item.path)">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="hub-icon-wrapper rounded-4 d-flex align-items-center justify-content-center @theme.BgSubtleClass @theme.TextClass">
+                            <i class="@item.icon fs-2"></i>
+                        </div>
+                        <div class="hub-arrow rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold text-body mb-1">@item.name</h4>
+                    <p class="text-body-secondary small mb-0">@item.description</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
-    private List<ModuleDTO> Modules = new();
-    private ModuleDTO? selectedModule;
-    private string texti = string.Empty;
-    private AppModal Minterfaces = default!;
+    private string? _userName;
+    private string? _userRole;
+    private List<InterfaceDTO> _interfaces = new();
+
+    private string MensajeBienvenida
+    {
+        get
+        {
+            var hora = DateTime.Now.Hour;
+            if (hora < 12) return "Buenos días";
+            if (hora < 19) return "Buenas tardes";
+            return "Buenas noches";
+        }
+    }
+
+    private string FechaActualFormateada =>
+        DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
 
     protected override async Task OnInitializedAsync()
     {
         LayoutService.SetTitle("Inicio");
-        Modules = await ModuleService.GetModulesAsync();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                _userName = user.Identity.Name;
+                _userRole = user.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value 
+                            ?? user.Claims.FirstOrDefault(c => c.Type == "role")?.Value 
+                            ?? "Operador";
+            }
+        }
+        catch { }
+
+        try
+        {
+            var modules = await ModuleService.GetModulesAsync();
+            _interfaces = modules.FirstOrDefault()?.interfaceList?.Where(x => x.status).ToList() ?? new();
+        }
+        catch { }
     }
 
-    private async Task OpenModule(ModuleDTO module)
+    private void NavegarA(string ruta)
     {
-        selectedModule = module;
-        texti = "";
-        await Minterfaces.OpenModal();
-    }
-
-    private async Task irPagina(InterfaceDTO item)
-    {
-        await Minterfaces.CloseModal();
-        NavigationManager.NavigateTo(item.path);
+        var cleanPath = ruta.TrimStart('/');
+        NavigationManager.NavigateTo($"/{cleanPath}");
     }
 }
