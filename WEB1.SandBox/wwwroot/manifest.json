@@ -1,0 +1,75 @@
+{
+  "name": "YAC Préstamos - Sistema de Gestión",
+  "short_name": "YAC Préstamos",
+  "description": "Sistema integral de gestión y control financiero de préstamos, clientes y pagos",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#16a34a",
+  "lang": "es-ES",
+  "categories": [
+    "finance",
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "iconos/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "iconos/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "brand/logoyac.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Préstamos",
+      "short_name": "Préstamos",
+      "description": "Gestión de créditos y registro de abonos",
+      "url": "/prestamos",
+      "icons": [
+        {
+          "src": "iconos/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "short_name": "Clientes",
+      "description": "Directorio de prestatarios",
+      "url": "/clientes",
+      "icons": [
+        {
+          "src": "iconos/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Métricas financieras y reportes",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "iconos/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
