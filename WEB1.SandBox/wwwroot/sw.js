@@ -58,7 +58,7 @@ self.addEventListener("fetch", (evento) => {
   }
 
   // 3. Estrategia para archivos estáticos (CSS, JS, Fuentes, Imágenes, Iconos)
-  const esRecursoEstatico = 
+  const esRecursoEstatico =
     url.pathname.endsWith(".css") ||
     url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".woff2") ||
@@ -82,7 +82,7 @@ self.addEventListener("fetch", (evento) => {
               const clon = respuestaRed.clone();
               caches.open(NombreCache).then((c) => c.put(evento.request, clon));
             }
-          }).catch(() => {});
+          }).catch(() => { });
           return respuestaCache;
         }
 
