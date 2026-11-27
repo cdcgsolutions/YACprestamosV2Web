@@ -13,7 +13,7 @@
 
 <div class="login-wrapper d-flex align-items-center justify-content-center min-vh-100 p-3 p-md-4">
     <!-- Card Principal Split Elegante estilo SIS.INV -->
-    <div class="card login-card border-0 shadow-lg overflow-hidden" style="max-width: 880px; width: 100%; border-radius: 1.25rem;">
+    <div class="card login-card border-0 shadow-lg overflow-hidden" style="max-width: 880px; width: 100%; border-radius: 1.25rem;" data-bs-theme="light">
         <div class="row g-0">
             <!-- Columna Izquierda: Banner Visual con loginOffice.png (Visible en Desktop) -->
             <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-4 p-xl-5 text-white position-relative login-brand-side">
@@ -35,7 +35,7 @@
             </div>
 
             <!-- Columna Derecha: Formulario con Colores Estáticos Nítidos -->
-            <div class="col-12 col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
+            <div class="col-12 col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white" data-bs-theme="light">
                 <div class="text-center mb-4">
                     <div class="brand-icon-box mx-auto mb-3 shadow d-lg-none">
                         <i class="fa-solid fa-hand-holding-dollar fs-2 text-primary"></i>
@@ -83,14 +83,26 @@
                             <span class="input-group-text bg-white border-end-0 text-secondary">
                                 <i class="fa-solid fa-lock text-primary"></i>
                             </span>
-                            <InputText type="password"
-                                       id="inputPassword"
-                                       class="form-control border-start-0 ps-1"
-                                       @bind-Value="_loginModel.Password"
-                                       disabled="@_isProcessing"
-                                       autocomplete="current-password" />
+                            <input type="@(_mostrarContrasena ? "text" : "password")"
+                                   id="inputPassword"
+                                   class="form-control border-start-0 ps-1"
+                                   @bind="_loginModel.Password"
+                                   disabled="@_isProcessing"
+                                   autocomplete="current-password" />
                         </div>
                         <ValidationMessage For="@(() => _loginModel.Password)" class="text-danger small mt-1 d-block" />
+
+                        <!-- Checkbox Mostrar/Ocultar Contraseña -->
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="checkMostrarContrasena" 
+                                   @bind="_mostrarContrasena"
+                                   disabled="@_isProcessing">
+                            <label class="form-check-label small text-secondary cursor-pointer user-select-none" for="checkMostrarContrasena">
+                                @(_mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña")
+                            </label>
+                        </div>
                     </div>
 
                     <MudButton ButtonType="ButtonType.Submit"
@@ -157,29 +169,66 @@
         letter-spacing: 1.5px;
     }
 
-    /* Estilos de inputs de login con labels arriba */
+    /* Estilos estáticos de inputs de login: Siempre fondo blanco y texto oscuro */
     .login-input-group .form-control,
-    .login-input-group .input-group-text,
-    .login-input-group .btn {
+    .login-input-group .input-group-text {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
         padding-top: 0.65rem;
         padding-bottom: 0.65rem;
-        border-color: #cbd5e1;
     }
 
     .login-input-group .form-control {
+        background-color: #ffffff !important;
         color: #0f172a !important;
         font-weight: 500;
         font-size: 0.95rem;
     }
 
     .login-input-group .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: none;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #0d6efd !important;
+        box-shadow: none !important;
     }
 
-    .login-input-group:focus-within .input-group-text,
-    .login-input-group:focus-within .btn {
-        border-color: #0d6efd;
+    .login-input-group .form-control::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    .login-input-group:focus-within .input-group-text {
+        border-color: #0d6efd !important;
+    }
+
+    /* Labels y Checkbox con colores estáticos sobre fondo blanco */
+    .login-card .form-label {
+        color: #1e293b !important;
+    }
+
+    .login-card .form-check-input {
+        background-color: #ffffff !important;
+        border-color: #94a3b8 !important;
+    }
+
+    .login-card .form-check-input:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+
+    .login-card .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    .login-card .form-check-label {
+        color: #475569 !important;
+    }
+
+    /* Ocultar iconos de revelación nativos de Edge/IE */
+    input::-ms-reveal,
+    input::-ms-clear {
+        display: none !important;
     }
 
     /* Corrección de autocompletado en fondo blanco */
@@ -198,6 +247,7 @@
     private LoginDTO _loginModel = new();
     private bool _isProcessing = false;
     private string? _errorMessage;
+    private bool _mostrarContrasena = false;
 
     private async Task HandleLogin()
     {
