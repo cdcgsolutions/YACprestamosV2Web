@@ -23,7 +23,7 @@
                 </span>
             </div>
             <h2 class="fw-bold text-body mb-0">
-                @MensajeBienvenida, <span>@(_userName ?? "Usuario")</span>
+                Bienvenido/a <span>@(_userName ?? "Usuario")</span>
             </h2>
         </div>
     </div>
@@ -33,7 +33,7 @@
         @for (int i = 0; i < _interfaces.Count; i++)
         {
             var item = _interfaces[i];
-            var theme = BootstrapColorHelper.GetTheme(i);
+            var theme = BootstrapColorHelper.GetTheme(i, _currentPalette);
 
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm rounded-4 bg-body hub-card @theme.CardThemeClass p-4 cursor-pointer"
@@ -58,23 +58,14 @@
     private string? _userName;
     private string? _userRole;
     private List<InterfaceDTO> _interfaces = new();
-
-    private string MensajeBienvenida
-    {
-        get
-        {
-            var hora = DateTime.Now.Hour;
-            if (hora < 12) return "Buenos días";
-            if (hora < 19) return "Buenas tardes";
-            return "Buenas noches";
-        }
-    }
+    private string[] _currentPalette = BootstrapColorHelper.GetShuffledPalette();
 
     private string FechaActualFormateada =>
         DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
 
     protected override async Task OnInitializedAsync()
     {
+        _currentPalette = BootstrapColorHelper.GetShuffledPalette();
         LayoutService.SetTitle("Inicio");
 
         try

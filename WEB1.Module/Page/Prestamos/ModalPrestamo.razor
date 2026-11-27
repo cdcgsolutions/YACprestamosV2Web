@@ -26,7 +26,11 @@
                            @bind-Value="Prestamo.IdCliente" 
                            Variant="Variant.Outlined" 
                            Margin="Margin.Dense"
-                           AnchorOrigin="Origin.BottomCenter">
+                           Dense="true"
+                           FullWidth="true"
+                           AnchorOrigin="Origin.BottomLeft"
+                           TransformOrigin="Origin.TopLeft"
+                           RelativeWidth="DropdownWidth.Relative">
                     @foreach (var c in Clientes.Where(x => x.EstaHabilitado))
                     {
                         <MudSelectItem Value="@c.IdCliente">@c.Nombre - @c.Celular</MudSelectItem>
@@ -59,7 +63,11 @@
                        @bind-Value="Prestamo.ModalidadCobro" 
                        Variant="Variant.Outlined" 
                        Margin="Margin.Dense"
-                       AnchorOrigin="Origin.BottomCenter">
+                       Dense="true"
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomLeft"
+                       TransformOrigin="Origin.TopLeft"
+                       RelativeWidth="DropdownWidth.Relative">
                 <MudSelectItem Value="@("Diario")">Diario</MudSelectItem>
                 <MudSelectItem Value="@("Semanal")">Semanal</MudSelectItem>
                 <MudSelectItem Value="@("Quincenal")">Quincenal</MudSelectItem>

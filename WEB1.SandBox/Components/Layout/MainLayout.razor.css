@@ -43,6 +43,7 @@
 .header-title-container {
     display: flex;
     align-items: center;
+    min-width: 0;
 }
 
 .brand-title {
@@ -52,7 +53,14 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-right: 1rem;
+    font-size: 1.25rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .brand-title {
+        font-size: 1.1rem;
+    }
 }
 
 /* ... existing code ... */
@@ -109,7 +117,18 @@
 .page-title {
     font-weight: 600;
     color: var(--bs-body-color);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+
+@media (max-width: 767.98px) {
+    .page-title {
+        max-width: 160px;
+        font-size: 0.95rem;
+    }
 }
 
 .profile-avatar {

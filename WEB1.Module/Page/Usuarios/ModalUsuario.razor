@@ -29,7 +29,11 @@
                        @bind-Value="Usuario.Rol" 
                        Variant="Variant.Outlined" 
                        Margin="Margin.Dense"
-                       AnchorOrigin="Origin.BottomCenter">
+                       Dense="true"
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomLeft"
+                       TransformOrigin="Origin.TopLeft"
+                       RelativeWidth="DropdownWidth.Relative">
                 <MudSelectItem Value="@("SuperAdmin")">SuperAdmin</MudSelectItem>
                 <MudSelectItem Value="@("Administrador")">Administrador</MudSelectItem>
                 <MudSelectItem Value="@("Operador")">Operador</MudSelectItem>

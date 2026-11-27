@@ -6,14 +6,16 @@ namespace WEB1.SandBox.Helpers;
 public static class BootstrapColorHelper
 {
     /// <summary>
-    /// Paleta de 4 colores estándar de Bootstrap para distribuir cíclicamente.
+    /// Paleta de 6 colores (Rojo, Naranja, Amarillo, Verde, Azul, Violeta) para distribuir cíclicamente.
     /// </summary>
     private static readonly string[] DefaultPalette = new[]
     {
-        "primary",   // Azul Bootstrap
-        "success",   // Verde Bootstrap
-        "warning",   // Ámbar Bootstrap
-        "info"       // Celeste Bootstrap
+        "danger",    // Rojo (Bootstrap nativo)
+        "orange",    // Naranja (Extendida con soporte sutil)
+        "warning",   // Amarillo (Bootstrap nativo)
+        "success",   // Verde (Bootstrap nativo)
+        "primary",   // Azul (Bootstrap nativo)
+        "purple"     // Violeta (Extendida con soporte sutil)
     };
 
     /// <summary>
@@ -34,6 +36,16 @@ public static class BootstrapColorHelper
     {
         var color = GetColor(index, customPalette);
         return new BootstrapThemeInfo(color);
+    }
+
+    /// <summary>
+    /// Retorna una copia de la paleta con las posiciones de los colores barajadas aleatoriamente.
+    /// </summary>
+    public static string[] GetShuffledPalette()
+    {
+        var shuffled = (string[])DefaultPalette.Clone();
+        Random.Shared.Shuffle(shuffled);
+        return shuffled;
     }
 
     public static IReadOnlyList<string> Palette => DefaultPalette;

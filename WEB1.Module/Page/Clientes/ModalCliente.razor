@@ -21,8 +21,12 @@
                        @bind-Value="Cliente.IdInstitucion" 
                        Variant="Variant.Outlined" 
                        Margin="Margin.Dense"
-                       Clearable="true"
-                       AnchorOrigin="Origin.BottomCenter">
+                       Dense="true"
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomLeft"
+                       TransformOrigin="Origin.TopLeft"
+                       RelativeWidth="DropdownWidth.Relative"
+                       Clearable="true">
                 <MudSelectItem T="int?" Value="@((int?)null)">-- Sin Institución --</MudSelectItem>
                 @foreach (var inst in Instituciones)
                 {
@@ -92,7 +96,11 @@
                        @bind-Value="Cliente.EstadoCivil" 
                        Variant="Variant.Outlined" 
                        Margin="Margin.Dense"
-                       AnchorOrigin="Origin.BottomCenter">
+                       Dense="true"
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomLeft"
+                       TransformOrigin="Origin.TopLeft"
+                       RelativeWidth="DropdownWidth.Relative">
                 <MudSelectItem Value="@("Soltero(a)")">Soltero(a)</MudSelectItem>
                 <MudSelectItem Value="@("Casado(a)")">Casado(a)</MudSelectItem>
                 <MudSelectItem Value="@("Divorciado(a)")">Divorciado(a)</MudSelectItem>

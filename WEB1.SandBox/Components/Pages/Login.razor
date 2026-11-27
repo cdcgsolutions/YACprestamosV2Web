@@ -55,34 +55,42 @@
                 <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
                     <DataAnnotationsValidator />
 
-                    <div class="mb-3">
-                        <MudTextField @bind-Value="_loginModel.UserName"
-                                      Label="Usuario o Correo"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.PersonOutline"
-                                      AdornmentColor="Color.Primary"
-                                      Class="custom-login-field"
-                                      For="@(() => _loginModel.UserName)"
-                                      Disabled="@_isProcessing"
-                                      FullWidth="true" />
+                    <!-- Campo Correo Electrónico con Label arriba -->
+                    <div class="mb-3 text-start">
+                        <label for="inputEmail" class="form-label fw-semibold small text-dark mb-1">
+                            Correo Electrónico
+                        </label>
+                        <div class="input-group login-input-group">
+                            <span class="input-group-text bg-white border-end-0 text-secondary">
+                                <i class="fa-solid fa-envelope text-primary"></i>
+                            </span>
+                            <InputText type="email"
+                                       id="inputEmail"
+                                       class="form-control border-start-0 ps-1"
+                                       @bind-Value="_loginModel.UserName"
+                                       disabled="@_isProcessing"
+                                       autocomplete="email" />
+                        </div>
+                        <ValidationMessage For="@(() => _loginModel.UserName)" class="text-danger small mt-1 d-block" />
                     </div>
 
-                    <div class="mb-4">
-                        <MudTextField @bind-Value="_loginModel.Password"
-                                      Label="Contraseña"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="@_passwordInputType"
-                                      Adornment="Adornment.End"
-                                      AdornmentIcon="@_passwordIcon"
-                                      AdornmentColor="Color.Primary"
-                                      Class="custom-login-field"
-                                      OnAdornmentClick="TogglePasswordVisibility"
-                                      For="@(() => _loginModel.Password)"
-                                      Disabled="@_isProcessing"
-                                      FullWidth="true" />
+                    <!-- Campo Contraseña con Label arriba -->
+                    <div class="mb-4 text-start">
+                        <label for="inputPassword" class="form-label fw-semibold small text-dark mb-1">
+                            Contraseña
+                        </label>
+                        <div class="input-group login-input-group">
+                            <span class="input-group-text bg-white border-end-0 text-secondary">
+                                <i class="fa-solid fa-lock text-primary"></i>
+                            </span>
+                            <InputText type="password"
+                                       id="inputPassword"
+                                       class="form-control border-start-0 ps-1"
+                                       @bind-Value="_loginModel.Password"
+                                       disabled="@_isProcessing"
+                                       autocomplete="current-password" />
+                        </div>
+                        <ValidationMessage For="@(() => _loginModel.Password)" class="text-danger small mt-1 d-block" />
                     </div>
 
                     <MudButton ButtonType="ButtonType.Submit"
@@ -149,41 +157,36 @@
         letter-spacing: 1.5px;
     }
 
-    /* Colores estáticos negros para labels e inputs en fondo blanco */
-    .custom-login-field input {
+    /* Estilos de inputs de login con labels arriba */
+    .login-input-group .form-control,
+    .login-input-group .input-group-text,
+    .login-input-group .btn {
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+        border-color: #cbd5e1;
+    }
+
+    .login-input-group .form-control {
         color: #0f172a !important;
-        font-weight: 500 !important;
+        font-weight: 500;
+        font-size: 0.95rem;
     }
 
-    .custom-login-field label,
-    .custom-login-field .mud-input-label,
-    .custom-login-field .mud-input-label-outlined {
-        color: #334155 !important;
-        font-weight: 600 !important;
+    .login-input-group .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: none;
     }
 
-    .custom-login-field .mud-input-outlined-border {
-        border-color: #cbd5e1 !important;
-    }
-
-    .custom-login-field:hover .mud-input-outlined-border {
-        border-color: #64748b !important;
-    }
-
-    .custom-login-field.mud-input-focused .mud-input-outlined-border {
-        border-color: #0d6efd !important;
-    }
-
-    .custom-login-field.mud-input-focused label,
-    .custom-login-field.mud-input-focused .mud-input-label-outlined {
-        color: #0d6efd !important;
+    .login-input-group:focus-within .input-group-text,
+    .login-input-group:focus-within .btn {
+        border-color: #0d6efd;
     }
 
     /* Corrección de autocompletado en fondo blanco */
-    .custom-login-field input:-webkit-autofill,
-    .custom-login-field input:-webkit-autofill:hover, 
-    .custom-login-field input:-webkit-autofill:focus, 
-    .custom-login-field input:-webkit-autofill:active {
+    .login-input-group input:-webkit-autofill,
+    .login-input-group input:-webkit-autofill:hover, 
+    .login-input-group input:-webkit-autofill:focus, 
+    .login-input-group input:-webkit-autofill:active {
         -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
         -webkit-text-fill-color: #0f172a !important;
         caret-color: #0f172a !important;
@@ -195,17 +198,6 @@
     private LoginDTO _loginModel = new();
     private bool _isProcessing = false;
     private string? _errorMessage;
-
-    private bool _showPassword = false;
-    private InputType _passwordInputType = InputType.Password;
-    private string _passwordIcon = Icons.Material.Filled.VisibilityOff;
-
-    private void TogglePasswordVisibility()
-    {
-        _showPassword = !_showPassword;
-        _passwordInputType = _showPassword ? InputType.Text : InputType.Password;
-        _passwordIcon = _showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
-    }
 
     private async Task HandleLogin()
     {

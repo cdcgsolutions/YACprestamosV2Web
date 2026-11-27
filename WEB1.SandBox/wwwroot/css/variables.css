@@ -127,3 +127,51 @@ table th {
 .mud-input-label-outlined {
     background-color: var(--bs-body-bg) !important;
 }
+
+/* ==========================================================================
+   Paleta extendida Bootstrap (Naranja y Violeta) - Modo Claro y Oscuro
+   ========================================================================== */
+:root,
+[data-bs-theme="light"] {
+    --bs-orange-val: #fd7e14;
+    --bs-orange-bg-subtle: #ffe5d0;
+    --bs-orange-border-subtle: #fecba1;
+
+    --bs-purple-val: #6f42c1;
+    --bs-purple-bg-subtle: #f3e8ff;
+    --bs-purple-border-subtle: #d8b4fe;
+}
+
+[data-bs-theme="dark"] {
+    --bs-orange-bg-subtle: #412000;
+    --bs-orange-border-subtle: #8a4100;
+
+    --bs-purple-bg-subtle: #2b134d;
+    --bs-purple-border-subtle: #56279a;
+}
+
+/* Clases utilitarias extendidas para Naranja */
+.text-orange {
+    color: var(--bs-orange-val) !important;
+}
+
+.bg-orange-subtle {
+    background-color: var(--bs-orange-bg-subtle) !important;
+}
+
+.border-orange-subtle {
+    border-color: var(--bs-orange-border-subtle) !important;
+}
+
+/* Clases utilitarias extendidas para Violeta */
+.text-purple {
+    color: var(--bs-purple-val) !important;
+}
+
+.bg-purple-subtle {
+    background-color: var(--bs-purple-bg-subtle) !important;
+}
+
+.border-purple-subtle {
+    border-color: var(--bs-purple-border-subtle) !important;
+}

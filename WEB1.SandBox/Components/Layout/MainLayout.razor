@@ -28,17 +28,17 @@
         }
 
         <!-- Header Section -->
-        <header class="pos-header d-flex align-items-center justify-content-between px-4 position-fixed start-0 w-100 bg-body transition-all" 
+        <header class="pos-header d-flex align-items-center justify-content-between px-3 px-md-4 position-fixed start-0 w-100 bg-body transition-all" 
                 style="@(GetAppMode() != "PRO" ? "top: 1.5rem;" : "top: 0;")">
-            <div class="header-title-container d-flex align-items-center">
-                <span class="brand-title h4 mb-0 cursor-pointer ms-0 fw-bold text-primary" @onclick="NavigateHome">
+            <div class="header-title-container d-flex align-items-center me-2">
+                <span class="brand-title mb-0 cursor-pointer ms-0 fw-bold flex-shrink-0" @onclick="NavigateHome">
                     @(Configuration["app:Name"] ?? "WEB1")
                 </span>
-                <div class="vertical-divider mx-3 border-start" style="height: 24px;"></div>
-                <span class="page-title text-secondary">@LayoutService.CurrentTitle</span>
+                <div class="vertical-divider mx-2 mx-md-3 border-start d-none d-sm-block flex-shrink-0" style="height: 24px;"></div>
+                <span class="page-title text-secondary d-none d-sm-inline">@LayoutService.CurrentTitle</span>
             </div>
 
-            <div class="search-container flex-grow-1 mx-5 d-none d-md-block">
+            <div class="search-container flex-grow-1 mx-4 mx-lg-5 d-none d-md-block">
                 <div class="position-relative">
                     <i class="bi bi-search position-absolute text-muted" style="top: 10px; left: 12px;"></i>
                     <input type="text" class="form-control ps-5 rounded-pill shadow-sm" placeholder="Buscar módulos o acciones..." 
@@ -46,7 +46,7 @@
                 </div>
             </div>
 
-            <div class="header-right d-flex align-items-center gap-3">
+            <div class="header-right d-flex align-items-center gap-2 gap-md-3 flex-shrink-0 ms-auto">
                 <!-- Role Badge -->
                 <div class="d-none d-md-flex align-items-center me-2">
                     <span class="badge bg-primary bg-opacity-10 text-primary border px-3 py-2 rounded-pill d-flex align-items-center">
@@ -56,9 +56,9 @@
                 </div>
 
                 <!-- User Profile Dropdown -->
-                <div class="dropdown">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm cursor-pointer" 
-                         style="width: 40px; height: 40px; font-size: 1rem; cursor: pointer;" 
+                <div class="dropdown flex-shrink-0">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm cursor-pointer flex-shrink-0" 
+                         style="width: 38px; height: 38px; font-size: 0.95rem; cursor: pointer;" 
                          title="@context.User.Identity?.Name" 
                          data-bs-toggle="dropdown" 
                          aria-expanded="false">

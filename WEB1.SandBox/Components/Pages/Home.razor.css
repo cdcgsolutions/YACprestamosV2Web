@@ -1,5 +1,5 @@
-.cursor-pointer { 
-    cursor: pointer; 
+.cursor-pointer {
+    cursor: pointer;
 }
 
 .hub-card {
@@ -40,6 +40,7 @@
 .hub-card.theme-primary:hover {
     border-color: rgba(var(--bs-primary-rgb), 0.5) !important;
 }
+
 .hub-card.theme-primary:hover .hub-arrow {
     background-color: var(--bs-primary) !important;
     color: #fff !important;
@@ -48,6 +49,7 @@
 .hub-card.theme-success:hover {
     border-color: rgba(var(--bs-success-rgb), 0.5) !important;
 }
+
 .hub-card.theme-success:hover .hub-arrow {
     background-color: var(--bs-success) !important;
     color: #fff !important;
@@ -56,6 +58,7 @@
 .hub-card.theme-warning:hover {
     border-color: rgba(var(--bs-warning-rgb), 0.5) !important;
 }
+
 .hub-card.theme-warning:hover .hub-arrow {
     background-color: var(--bs-warning) !important;
     color: #000 !important;
@@ -64,6 +67,7 @@
 .hub-card.theme-info:hover {
     border-color: rgba(var(--bs-info-rgb), 0.5) !important;
 }
+
 .hub-card.theme-info:hover .hub-arrow {
     background-color: var(--bs-info) !important;
     color: #000 !important;
@@ -72,6 +76,7 @@
 .hub-card.theme-danger:hover {
     border-color: rgba(var(--bs-danger-rgb), 0.5) !important;
 }
+
 .hub-card.theme-danger:hover .hub-arrow {
     background-color: var(--bs-danger) !important;
     color: #fff !important;
@@ -80,7 +85,26 @@
 .hub-card.theme-secondary:hover {
     border-color: rgba(var(--bs-secondary-rgb), 0.5) !important;
 }
+
 .hub-card.theme-secondary:hover .hub-arrow {
     background-color: var(--bs-secondary) !important;
+    color: #fff !important;
+}
+
+.hub-card.theme-orange:hover {
+    border-color: rgba(253, 126, 20, 0.5) !important;
+}
+
+.hub-card.theme-orange:hover .hub-arrow {
+    background-color: var(--bs-orange-val) !important;
+    color: #fff !important;
+}
+
+.hub-card.theme-purple:hover {
+    border-color: rgba(111, 66, 193, 0.5) !important;
+}
+
+.hub-card.theme-purple:hover .hub-arrow {
+    background-color: var(--bs-purple-val) !important;
     color: #fff !important;
 }

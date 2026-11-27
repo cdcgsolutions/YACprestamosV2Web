@@ -135,18 +135,18 @@ namespace WEB1.SandBox.Services
             {
                 new() 
                 { 
-                    name = "Clientes", 
-                    description = "Gestión de prestatarios, datos de contacto y estado.", 
-                    path = "clientes", 
-                    icon = "fa-solid fa-users", 
-                    status = true 
-                },
-                new() 
-                { 
                     name = "Instituciones", 
                     description = "Catálogo de instituciones y empresas asociadas a clientes.", 
                     path = "instituciones", 
                     icon = "fa-solid fa-building", 
+                    status = true 
+                },
+                new() 
+                { 
+                    name = "Clientes", 
+                    description = "Gestión de prestatarios, datos de contacto y estado.", 
+                    path = "clientes", 
+                    icon = "fa-solid fa-users", 
                     status = true 
                 },
                 new() 
