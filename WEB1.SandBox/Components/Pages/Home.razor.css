@@ -108,3 +108,29 @@
     background-color: var(--bs-purple-val) !important;
     color: #fff !important;
 }
+
+/* ==========================================================================
+   Recuadros de Iconos para Temas Personalizados (Naranja y Púrpura)
+   ========================================================================== */
+.hub-card.theme-orange .hub-icon-wrapper {
+    background-color: #ffe5d0 !important;
+    color: #fd7e14 !important;
+}
+
+.hub-card.theme-purple .hub-icon-wrapper {
+    background-color: #f3e8ff !important;
+    color: #6f42c1 !important;
+}
+
+/* Soporte para Modo Oscuro */
+:root[data-bs-theme="dark"] .hub-card.theme-orange .hub-icon-wrapper,
+[data-bs-theme="dark"] .hub-card.theme-orange .hub-icon-wrapper {
+    background-color: #412000 !important;
+    color: #fed7aa !important;
+}
+
+:root[data-bs-theme="dark"] .hub-card.theme-purple .hub-icon-wrapper,
+[data-bs-theme="dark"] .hub-card.theme-purple .hub-icon-wrapper {
+    background-color: #2b134d !important;
+    color: #c4b5fd !important;
+}

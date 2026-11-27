@@ -1,4 +1,4 @@
-const NombreCache = "yac-prestamos-blazor-v1";
+const NombreCache = "yac-prestamos-blazor-v2";
 
 // Recursos estáticos prioritarios para el cascarón (App Shell)
 const RecursosCache = [
@@ -8,6 +8,7 @@ const RecursosCache = [
   "/iconos/icon.png",
   "/brand/logoyac.png",
   "/css/app.css",
+  "/css/variables.css",
   "/favicon.ico"
 ];
 
